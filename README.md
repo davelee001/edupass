@@ -6,16 +6,16 @@
 
 A blockchain-based education credits system built on Stellar network. EduPass represents **real utility** for education funding with no speculation or DeFi complexity.
 
-## 🎓 What is EduPass?
+## What is EduPass?
 
 EduPass is a Stellar-issued asset that represents education credits for:
-- 💳 **School fees** - Tuition and enrollment costs
-- 📚 **Tuition support** - Ongoing educational assistance
-- 🏫 **Training programs** - Vocational and skills training
-- 📝 **Exam fees** - Certification and testing costs
-- 📖 **Books & Materials** - Educational resources
+- **School fees** - Tuition and enrollment costs
+- **Tuition support** - Ongoing educational assistance
+- **Training programs** - Vocational and skills training
+- **Exam fees** - Certification and testing costs
+- **Books & Materials** - Educational resources
 
-## 🔄 How It Works
+## How It Works
 
 ```
 ┌─────────────┐        ┌──────────────┐        ┌─────────────┐
@@ -34,18 +34,18 @@ EduPass is a Stellar-issued asset that represents education credits for:
 3. **Redeem**: Schools redeem credits for payment
 4. **Burn**: Credits removed from circulation after use
 
-## ✨ Key Features
+## Key Features
 
-- ✅ **Real utility** - No hype, no speculation, no DeFi nonsense
-- 🔗 **Blockchain transparency** - All transactions on Stellar network
-- 📜 **Immutable history** - Complete audit trail
-- 💰 **Low cost** - Minimal transaction fees (~$0.00001)
-- ⚡ **Fast settlement** - 3-5 seconds confirmation
-- 🔐 **Role-based access** - Issuer, Beneficiary, School permissions
-- 🌍 **Cross-border ready** - Works globally via Stellar
-- 📊 **Built-in reporting** - Transaction analytics and statistics
+- **Real utility** - No hype, no speculation, no DeFi nonsense
+- **Blockchain transparency** - All transactions on Stellar network
+- **Immutable history** - Complete audit trail
+- **Low cost** - Minimal transaction fees (~$0.00001)
+- **Fast settlement** - 3-5 seconds confirmation
+- **Role-based access** - Issuer, Beneficiary, School permissions
+- **Cross-border ready** - Works globally via Stellar
+- **Built-in reporting** - Transaction analytics and statistics
 
-## 🚀 Quick Start
+## Quick Start
 
 The fastest way to get started:
 
@@ -66,7 +66,7 @@ chmod +x setup.sh
 
 Then follow the setup wizard to configure your environment.
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 edupass/
@@ -98,7 +98,7 @@ edupass/
 └── README.md
 ```
 
-## 🛠️ Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 
@@ -211,40 +211,40 @@ cd frontend && npm run dev
 - Backend API: http://localhost:3000
 - API Health: http://localhost:3000/health
 
-## 👥 User Roles & Capabilities
+## User Roles & Capabilities
 
-### 🏛️ Issuer (Authority/NGO)
+### Issuer (Authority/NGO)
 Manage education credit distribution:
-- ✅ Issue new credits to beneficiaries
-- ✅ View all beneficiaries and their balances
-- ✅ Track total credits issued
-- ✅ Generate issuance reports
-- ✅ Monitor credit usage
+- Issue new credits to beneficiaries
+- View all beneficiaries and their balances
+- Track total credits issued
+- Generate issuance reports
+- Monitor credit usage
 
 **Use Case**: Educational NGO issuing scholarships, Government education programs
 
-### 🎓 Beneficiary (Student)
+### Beneficiary (Student)
 Receive and use education credits:
-- ✅ View credit balance in real-time
-- ✅ Transfer credits to educational institutions
-- ✅ View complete transaction history
-- ✅ Get proof of funding
-- ✅ Find registered schools
+- View credit balance in real-time
+- Transfer credits to educational institutions
+- View complete transaction history
+- Get proof of funding
+- Find registered schools
 
 **Use Case**: Students receiving scholarships or education grants
 
-### 🏫 School/Institution
+### School/Institution
 Accept and redeem education credits:
-- ✅ Receive credit transfers from students
-- ✅ View pending transactions
-- ✅ Redeem credits for payment
-- ✅ Burn credits after service delivery
-- ✅ Track redemption history by service type
-- ✅ Generate financial reports
+- Receive credit transfers from students
+- View pending transactions
+- Redeem credits for payment
+- Burn credits after service delivery
+- Track redemption history by service type
+- Generate financial reports
 
 **Use Case**: Schools, universities, training centers, examination boards
 
-## 💻 Technology Stack
+## Technology Stack
 
 ### Backend
 - **Runtime**: Node.js 18+
@@ -270,16 +270,16 @@ Accept and redeem education credits:
 - **Asset**: Custom EDUPASS token
 - **Operations**: Payment, Trustline, Burning
 
-## 📚 Documentation
+## Documentation
 
 Comprehensive guides for developers and users:
 
-- 📖 [**API Reference**](docs/API_REFERENCE.md) - Complete REST API documentation with examples
-- 🏗️ [**Architecture Overview**](docs/ARCHITECTURE.md) - System design, data flow, and database schema
-- ⭐ [**Stellar Integration Guide**](docs/STELLAR_GUIDE.md) - Blockchain integration details and best practices
-- 🚀 [**Deployment Guide**](docs/DEPLOYMENT.md) - Production deployment on VPS, Docker, Heroku, etc.
+- [**API Reference**](docs/API_REFERENCE.md) - Complete REST API documentation with examples
+- [**Architecture Overview**](docs/ARCHITECTURE.md) - System design, data flow, and database schema
+- [**Stellar Integration Guide**](docs/STELLAR_GUIDE.md) - Blockchain integration details and best practices
+- [**Deployment Guide**](docs/DEPLOYMENT.md) - Production deployment on VPS, Docker, Heroku, etc.
 
-## 🧪 Testing
+## Testing
 
 Run the test suite:
 
@@ -296,30 +296,30 @@ npm test
 npm test
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Backend won't start
-- ✅ Check PostgreSQL is running: `pg_isready`
-- ✅ Verify database credentials in `.env`
-- ✅ Check logs: `backend/logs/error.log`
+- Check PostgreSQL is running: `pg_isready`
+- Verify database credentials in `.env`
+- Check logs: `backend/logs/error.log`
 
 ### Database connection error
-- ✅ Ensure PostgreSQL service is running
-- ✅ Verify database exists: `psql -U postgres -l`
-- ✅ Check user permissions
+- Ensure PostgreSQL service is running
+- Verify database exists: `psql -U postgres -l`
+- Check user permissions
 
 ### Stellar transactions failing
-- ✅ Verify network setting (testnet vs public)
-- ✅ Check issuer account has XLM balance
-- ✅ Ensure trustlines are established
-- ✅ View transaction details in Stellar Expert
+- Verify network setting (testnet vs public)
+- Check issuer account has XLM balance
+- Ensure trustlines are established
+- View transaction details in Stellar Expert
 
 ### Frontend shows API errors
-- ✅ Check backend is running on port 3000
-- ✅ Verify CORS settings
-- ✅ Check browser console for details
+- Check backend is running on port 3000
+- Verify CORS settings
+- Check browser console for details
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Here's how you can help:
 
@@ -343,53 +343,53 @@ We welcome contributions! Here's how you can help:
 - Focus on constructive feedback
 - Help others learn and grow
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ### What this means:
-- ✅ Free to use for personal and commercial projects
-- ✅ Modify and distribute as needed
-- ✅ No warranty provided
+- Free to use for personal and commercial projects
+- Modify and distribute as needed
+- No warranty provided
 
-## 🌟 Project Status
+## Project Status
 
 **Current Version**: 1.0.0  
-**Status**: Production Ready ✅
+**Status**: Production Ready
 
 ### Implemented Features
-- ✅ Complete user authentication system
-- ✅ Stellar blockchain integration
-- ✅ Credit issuance, transfer, and burning
-- ✅ Role-based dashboards
-- ✅ Transaction history and reporting
-- ✅ PostgreSQL database with migrations
-- ✅ Comprehensive API documentation
-- ✅ Production deployment guides
+- Complete user authentication system
+- Stellar blockchain integration
+- Credit issuance, transfer, and burning
+- Role-based dashboards
+- Transaction history and reporting
+- PostgreSQL database with migrations
+- Comprehensive API documentation
+- Production deployment guides
 
 ### Roadmap
-- 🔄 Multi-signature support for large issuances
-- 🔄 Email/SMS notifications
-- 🔄 Advanced analytics dashboard
-- 🔄 Mobile application (iOS/Android)
-- 🔄 Batch credit issuance
-- 🔄 KYC/AML integration
-- 🔄 Multi-language support
+- Multi-signature support for large issuances
+- Email/SMS notifications
+- Advanced analytics dashboard
+- Mobile application (iOS/Android)
+- Batch credit issuance
+- KYC/AML integration
+- Multi-language support
 
-## 💬 Support & Community
+## Support & Community
 
 - **Issues**: [GitHub Issues](https://github.com/davelee001/edupass/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/davelee001/edupass/discussions)
 - **Stellar Community**: [Stellar Discord](https://discord.gg/stellardev)
 - **Email**: support@edupass.example.com (coming soon)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Stellar Development Foundation](https://stellar.org) for the blockchain platform
 - All contributors who help improve EduPass
 - Educational institutions testing and providing feedback
 
-## 📊 Stats
+## Stats
 
 - **Total Commits**: 37+
 - **Files**: 40+
