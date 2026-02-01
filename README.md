@@ -3,6 +3,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
 [![Stellar](https://img.shields.io/badge/Stellar-Network-blue)](https://stellar.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-%3E%3D14-blue)](https://www.postgresql.org)
+[![Status](https://img.shields.io/badge/status-in%20development-yellow)](https://github.com/davelee001/edupass)
 
 A blockchain-based education credits system built on Stellar network. EduPass represents **real utility** for education funding with no speculation or DeFi complexity.
 
@@ -395,19 +397,33 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Project Status
 
 **Current Version**: 1.0.0  
-**Status**: Production Ready
+**Status**: In Development - Ready for Testing
 
-### Implemented Features
+### ✅ Completed Features
 - Complete user authentication system
-- Stellar blockchain integration
+- Stellar blockchain integration (updated to @stellar/stellar-sdk v12.3.0)
 - Credit issuance, transfer, and burning
 - Role-based dashboards
 - Transaction history and reporting
-- PostgreSQL database with migrations
+- PostgreSQL database schema and migrations
+- Automated database setup scripts (Windows/Linux/Mac)
 - Comprehensive API documentation
 - Production deployment guides
+- Environment configuration templates
+- Stellar issuer account creation script
 
-### Roadmap
+### 📋 Setup Progress
+- ✅ Repository structure complete
+- ✅ Backend dependencies installed
+- ✅ Frontend dependencies installed
+- ✅ Environment variables configured
+- ✅ Database setup scripts ready
+- ⏳ PostgreSQL installation (requires manual setup)
+- ⏳ Stellar issuer account generation (pending PostgreSQL)
+- ⏳ Initial testing
+
+### 🚀 Roadmap
+- Complete initial deployment and testing
 - Multi-signature support for large issuances
 - Email/SMS notifications
 - Advanced analytics dashboard
@@ -431,12 +447,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Stats
 
-- **Total Commits**: 42+
+- **Total Commits**: 48+
 - **Files**: 45+
 - **Lines of Code**: 5500+
 - **Documentation Pages**: 5
 - **Supported Roles**: 3
 - **Database Scripts**: 3 (SQL, Windows, Linux/Mac)
+- **Latest Update**: Updated to @stellar/stellar-sdk v12.3.0
 
 ---
 
