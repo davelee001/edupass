@@ -89,12 +89,17 @@ edupass/
 ├── docs/                      # Comprehensive documentation
 │   ├── API_REFERENCE.md       # API endpoints guide
 │   ├── ARCHITECTURE.md        # System architecture
+│   ├── DATABASE_SETUP.md      # Database setup guide
 │   ├── STELLAR_GUIDE.md       # Blockchain integration
 │   └── DEPLOYMENT.md          # Production deployment
 ├── scripts/                   # Utility scripts
-│   └── create-issuer.js       # Stellar account creator
+│   ├── create-issuer.js       # Stellar account creator
+│   ├── setup-database.sql     # PostgreSQL setup script
+│   ├── setup-database.bat     # Windows database setup
+│   └── setup-database.sh      # Linux/Mac database setup
 ├── setup.bat                  # Windows setup script
 ├── setup.sh                   # Linux/Mac setup script
+├── .env.example               # Environment template
 └── README.md
 ```
 
@@ -127,7 +132,19 @@ cd ../frontend && npm install
 
 ### Step 3: Set Up PostgreSQL Database
 
-**Option A: Using psql**
+**Option A: Automated Setup (Recommended)**
+```bash
+# Windows
+cd scripts
+setup-database.bat
+
+# Linux/Mac
+cd scripts
+chmod +x setup-database.sh
+./setup-database.sh
+```
+
+**Option B: Using psql**
 ```bash
 psql -U postgres
 CREATE DATABASE edupass;
@@ -136,9 +153,11 @@ GRANT ALL PRIVILEGES ON DATABASE edupass TO edupass_user;
 \q
 ```
 
-**Option B: Using GUI tool (pgAdmin, DBeaver, etc.)**
+**Option C: Using GUI tool (pgAdmin, DBeaver, etc.)**
 - Create a new database named `edupass`
 - Create a user with appropriate permissions
+
+> 📖 For detailed setup instructions, see [Database Setup Guide](docs/DATABASE_SETUP.md)
 
 ### Step 4: Configure Environment
 
@@ -276,6 +295,7 @@ Comprehensive guides for developers and users:
 
 - [**API Reference**](docs/API_REFERENCE.md) - Complete REST API documentation with examples
 - [**Architecture Overview**](docs/ARCHITECTURE.md) - System design, data flow, and database schema
+- [**Database Setup Guide**](docs/DATABASE_SETUP.md) - PostgreSQL installation and configuration
 - [**Stellar Integration Guide**](docs/STELLAR_GUIDE.md) - Blockchain integration details and best practices
 - [**Deployment Guide**](docs/DEPLOYMENT.md) - Production deployment on VPS, Docker, Heroku, etc.
 
@@ -391,11 +411,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Stats
 
-- **Total Commits**: 37+
-- **Files**: 40+
-- **Lines of Code**: 5000+
-- **Documentation Pages**: 4
+- **Total Commits**: 42+
+- **Files**: 45+
+- **Lines of Code**: 5500+
+- **Documentation Pages**: 5
 - **Supported Roles**: 3
+- **Database Scripts**: 3 (SQL, Windows, Linux/Mac)
 
 ---
 
