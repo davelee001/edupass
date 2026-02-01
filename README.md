@@ -107,10 +107,23 @@ edupass/
 
 ### Prerequisites
 
-Before you begin, ensure you have:
+Before you begin, ensure you have installed:
+
+#### Required Software
 - **Node.js** 18+ and npm ([Download](https://nodejs.org))
 - **PostgreSQL** 14+ ([Download](https://www.postgresql.org/download/))
+  - **Windows**: Download installer from postgresql.org or use `choco install postgresql15` (requires admin rights)
+  - **Mac**: `brew install postgresql`
+  - **Linux**: `sudo apt-get install postgresql` (Ubuntu/Debian)
 - **Git** ([Download](https://git-scm.com/downloads))
+
+#### Verify Installation
+```bash
+node --version    # Should show v18.0.0 or higher
+npm --version     # Should show 8.0.0 or higher
+psql --version    # Should show PostgreSQL 14 or higher
+git --version     # Should show Git 2.0 or higher
+```
 
 ### Step 1: Clone Repository
 
@@ -132,6 +145,8 @@ cd ../frontend && npm install
 
 ### Step 3: Set Up PostgreSQL Database
 
+> ⚠️ **Important**: PostgreSQL must be installed first! See Prerequisites above.
+
 **Option A: Automated Setup (Recommended)**
 ```bash
 # Windows
@@ -143,6 +158,11 @@ cd scripts
 chmod +x setup-database.sh
 ./setup-database.sh
 ```
+
+The script will:
+- Create the `edupass` database
+- Set up required extensions
+- Configure initial permissions
 
 **Option B: Using psql**
 ```bash
