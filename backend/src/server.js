@@ -13,6 +13,7 @@ const issuerRoutes = require('./routes/issuer');
 const beneficiaryRoutes = require('./routes/beneficiary');
 const schoolRoutes = require('./routes/school');
 const transactionRoutes = require('./routes/transactions');
+const sorobanRoutes = require('./routes/soroban');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -63,6 +64,7 @@ app.use('/api/issuer', issuerRoutes);
 app.use('/api/beneficiary', beneficiaryRoutes);
 app.use('/api/school', schoolRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/soroban', sorobanRoutes);
 
 // 404 handler
 app.use((req, res) => {
