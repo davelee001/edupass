@@ -328,6 +328,7 @@ Comprehensive guides for developers and users:
 - [**Architecture Overview**](docs/ARCHITECTURE.md) - System design, data flow, and database schema
 - [**Database Setup Guide**](docs/DATABASE_SETUP.md) - PostgreSQL installation and configuration
 - [**Stellar Integration Guide**](docs/STELLAR_GUIDE.md) - Blockchain integration details and best practices
+- [**Soroban Integration Guide**](docs/SOROBAN_INTEGRATION.md) - Smart contract integration architecture and usage
 - [**Deployment Guide**](docs/DEPLOYMENT.md) - Production deployment on VPS, Docker, Heroku, etc.
 
 ## Testing
@@ -411,7 +412,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### ✅ Completed Features
 - Complete user authentication system
 - Stellar blockchain integration (updated to @stellar/stellar-sdk v12.3.0)
-- Credit issuance, transfer, and burning
+- **Soroban smart contract integration** (Rust-based on-chain credit management)
+- Credit issuance, transfer, and burning via smart contracts
 - Role-based dashboards
 - Transaction history and reporting
 - PostgreSQL database schema and migrations
@@ -420,6 +422,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Production deployment guides
 - Environment configuration templates
 - Stellar issuer account creation script
+- **Backend Soroban service layer** (contract interaction wrapper)
+- **Soroban API routes** (REST endpoints for contract operations)
+- **Frontend Soroban service** (React integration for smart contracts)
+- **Soroban integration documentation** (comprehensive guide)
 
 ### 📋 Setup Progress
 - ✅ Repository structure complete
@@ -427,7 +433,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Frontend dependencies installed
 - ✅ Environment variables configured
 - ✅ Database setup scripts ready
+- ✅ Soroban smart contract written and tested
+- ✅ Backend integration complete (service + routes)
+- ✅ Frontend integration complete (sorobanService.js)
 - ⏳ PostgreSQL installation (requires manual setup)
+- ⏳ Rust installation (required for contract compilation)
+- ⏳ Smart contract deployment to testnet
 - ⏳ Stellar issuer account generation (pending PostgreSQL)
 - ⏳ Initial testing
 
@@ -455,13 +466,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Educational institutions testing and providing feedback
 
 ## Stats
-
-- **Total Commits**: 48+
-- **Files**: 45+
-- **Lines of Code**: 5500+
-- **Documentation Pages**: 5
+54+
+- **Files**: 50+
+- **Lines of Code**: 7500+
+- **Documentation Pages**: 6
 - **Supported Roles**: 3
 - **Database Scripts**: 3 (SQL, Windows, Linux/Mac)
+- **Smart Contract Functions**: 7 (Soroban)
+- **API Endpoints**: 25+
+- **Latest Update**: Complete Soroban smart contract integration
 - **Latest Update**: Updated to @stellar/stellar-sdk v12.3.0
 
 ---
