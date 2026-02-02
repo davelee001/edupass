@@ -80,6 +80,13 @@ edupass/
 │   │   └── utils/             # Logger and utilities
 │   ├── package.json
 │   └── .env.example
+├── contracts/                  # Soroban smart contracts
+│   ├── edupass-token/         # Main EduPass token contract
+│   │   ├── src/
+│   │   │   └── lib.rs        # Contract implementation
+│   │   └── Cargo.toml
+│   ├── Cargo.toml             # Workspace configuration
+│   └── README.md              # Contract documentation
 ├── frontend/                   # React dashboard application
 │   ├── src/
 │   │   ├── components/        # React components
@@ -291,7 +298,8 @@ Accept and redeem education credits:
 - **Runtime**: Node.js 18+
 - **Framework**: Express.js
 - **Database**: PostgreSQL 14+
-- **Blockchain**: Stellar SDK
+- **Blockchain**: Stellar SDK (@stellar/stellar-sdk v12.3.0)
+- **Smart Contracts**: Soroban (Rust)
 - **Authentication**: JWT (JSON Web Tokens)
 - **Logging**: Winston
 - **Security**: Helmet, bcryptjs, Rate limiting
@@ -307,9 +315,10 @@ Accept and redeem education credits:
 
 ### Blockchain
 - **Network**: Stellar (Testnet/Public)
-- **SDK**: stellar-sdk v11.3.0
+- **SDK**: @stellar/stellar-sdk v12.3.0
+- **Smart Contracts**: Soroban SDK v21.0.0
 - **Asset**: Custom EDUPASS token
-- **Operations**: Payment, Trustline, Burning
+- **Operations**: Payment, Trustline, Burning, Smart Contract Calls
 
 ## Documentation
 
