@@ -10,12 +10,19 @@ A blockchain-based education credits system built on Stellar network. EduPass re
 
 ## What is EduPass?
 
-EduPass is a Stellar-issued asset that represents education credits for:
+EduPass is a blockchain-based education credits system built on Stellar with **Soroban smart contracts**. The platform issues digital credits that represent real educational funding for:
 - **School fees** - Tuition and enrollment costs
 - **Tuition support** - Ongoing educational assistance
 - **Training programs** - Vocational and skills training
 - **Exam fees** - Certification and testing costs
 - **Books & Materials** - Educational resources
+
+### Why Blockchain?
+- **Transparency**: Every transaction is auditable on-chain
+- **Security**: Smart contracts enforce rules automatically
+- **Efficiency**: Near-instant settlements at minimal cost
+- **Trust**: No intermediaries, no hidden fees
+- **Global**: Works anywhere with internet access
 
 ## How It Works
 
@@ -38,14 +45,27 @@ EduPass is a Stellar-issued asset that represents education credits for:
 
 ## Key Features
 
+### Core Functionality
+- **Smart Contract-Based** - Soroban contracts manage all credit operations on-chain
 - **Real utility** - No hype, no speculation, no DeFi nonsense
 - **Blockchain transparency** - All transactions on Stellar network
-- **Immutable history** - Complete audit trail
-- **Low cost** - Minimal transaction fees (~$0.00001)
-- **Fast settlement** - 3-5 seconds confirmation
-- **Role-based access** - Issuer, Beneficiary, School permissions
-- **Cross-border ready** - Works globally via Stellar
+- **Immutable history** - Complete audit trail of all credit movements
+- **Expiring credits** - Optional expiration dates for time-bound grants
+- **Allocation tracking** - Purpose and metadata stored with each issuance
+
+### Technical Excellence
+- **Low cost** - Minimal transaction fees (~$0.00001 per transaction)
+- **Fast settlement** - 3-5 seconds confirmation time
+- **Role-based access** - Issuer, Beneficiary, School permissions enforced on-chain
+- **Cross-border ready** - Works globally via Stellar network
 - **Built-in reporting** - Transaction analytics and statistics
+- **Dual storage** - Blockchain for immutability + PostgreSQL for queries
+
+### Developer-Friendly
+- **RESTful API** - Complete backend API with 25+ endpoints
+- **React components** - Pre-built dashboard UI components
+- **Comprehensive docs** - 6 detailed documentation files
+- **Automated setup** - Cross-platform setup scripts included
 
 ## Quick Start
 
@@ -239,7 +259,33 @@ ISSUER_SECRET_KEY=SXXXXXXXXXX...
 
 ⚠️ **Important**: Never commit your secret keys to version control!
 
-### Step 6: Start the Application
+### Step 6: Compile Smart Contract (Optional)
+
+**Note**: Smart contract compilation requires Rust. If you don't have Rust installed:
+
+**Windows:**
+```powershell
+# Using winget (recommended)
+winget install Rustlang.Rust.MSVC
+
+# Or download from https://rustup.rs/
+```
+
+**Linux/Mac:**
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+**Build the contract:**
+```bash
+cd contracts/edupass-token
+cargo build --target wasm32-unknown-unknown --release
+soroban contract optimize --wasm target/wasm32-unknown-unknown/release/edupass_token.wasm
+```
+
+> 📖 For detailed smart contract documentation, see [Soroban Integration Guide](docs/SOROBAN_INTEGRATION.md)
+
+### Step 7: Start the Application
 
 **Development Mode:**
 ```bash
@@ -443,14 +489,33 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ⏳ Initial testing
 
 ### 🚀 Roadmap
-- Complete initial deployment and testing
+
+**Phase 1: Core Platform (Q1 2026)** ✅
+- ✅ Soroban smart contract implementation
+- ✅ Backend API integration
+- ✅ Frontend dashboard components
+- ⏳ Testnet deployment and testing
+- ⏳ Security audit
+
+**Phase 2: Enhanced Features (Q2 2026)**
 - Multi-signature support for large issuances
-- Email/SMS notifications
-- Advanced analytics dashboard
+- Batch credit issuance for efficiency
+- Advanced analytics dashboard with charts
+- Email/SMS notifications for transactions
+- Export reports (PDF/CSV)
+
+**Phase 3: Scaling (Q3 2026)**
 - Mobile application (iOS/Android)
-- Batch credit issuance
 - KYC/AML integration
-- Multi-language support
+- Multi-language support (Spanish, French, Swahili)
+- API webhooks for third-party integrations
+- Mainnet production deployment
+
+**Phase 4: Ecosystem Growth (Q4 2026)**
+- Partner institution onboarding
+- Cross-institutional credit transfers
+- Scholarship marketplace
+- Impact reporting and analytics
 
 ## Support & Community
 
