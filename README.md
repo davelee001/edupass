@@ -24,6 +24,14 @@ EduPass is a blockchain-based education credits system built on Stellar with **S
 - **Trust**: No intermediaries, no hidden fees
 - **Global**: Works anywhere with internet access
 
+## The Problem
+
+Educational funding distribution, particularly in developing regions and for scholarship programs, suffers from critical inefficiencies that harm both donors and beneficiaries. Traditional systems lack transparency, making it nearly impossible to verify that funds reach their intended recipients or are used for legitimate educational purposes. Intermediaries extract significant fees, delayed disbursements cause students to miss enrollment deadlines, and manual reconciliation processes are prone to fraud and administrative errors. Cross-border educational grants face additional challenges with currency exchange costs, compliance complexity, and limited auditability. Most critically, donors and NGOs have no real-time visibility into how their contributions are being utilized, leading to reduced trust and reluctance to fund education initiatives at scale.
+
+## The Solution
+
+EduPass eliminates these inefficiencies by leveraging Stellar blockchain and Soroban smart contracts to create a transparent, programmable education credits system. Credits are issued directly on-chain by authorized NGOs or government bodies, transferred instantly to student wallets at fractional cost (~$0.00001 per transaction), and can only be redeemed at pre-registered educational institutions for specific purposes defined in the smart contract. Every transaction is immutably recorded on the blockchain with complete metadata including purpose, expiration dates, and allocation details, providing real-time auditability for all stakeholders. Smart contracts automatically enforce rules—such as preventing expired credits from being used or restricting redemptions to verified schools—without requiring manual oversight. The dual-storage architecture combines blockchain immutability with PostgreSQL query efficiency, enabling donors to track impact in real-time while schools receive instant settlement. By removing intermediaries and automating compliance through code, EduPass reduces administrative costs by up to 90% while ensuring that every dollar designated for education actually reaches students and their schools.
+
 ## How It Works
 
 ```
