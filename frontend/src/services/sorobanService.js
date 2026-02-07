@@ -6,6 +6,63 @@ import api from './api';
  */
 
 const sorobanService = {
+  // Transaction status tracking
+  pendingTransactions: new Map(),
+
+  /**
+   * Check Soroban network health
+   * @returns {Promise} Health status
+   */
+  async checkHealth() {
+    try {
+      const response = await api.get('/soroban/health');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to check health:', error);
+      return { healthy: false, error: error.message };
+    }
+  },
+
+  /**
+   * Track a pending transaction
+   * @param {string} txHash - Transaction hash
+   * @param {object} metadata - Transaction metadata
+   */
+  trackTransaction(txHash, metadata) {
+    this.pendingTransactions.set(txHash, {
+      ...metadata,
+      timestamp: Date.now(),
+      status: 'pending',
+    });
+  },
+
+  /**
+   * Get pending transaction status
+   * @param {string} txHash - Transaction hash
+   * @returns {object|null} Transaction info
+   */
+  getPendingTransaction(txHash) {
+    return this.pendingTransactions.get(txHash) || null;
+  },
+
+  /**
+   * Clear completed transaction
+   * @param {string} txHash - Transaction hash
+   */
+  clearTransaction(txHash) {
+    this.pendingTransactions.delete(txHash);
+  },
+
+  /**
+   * Get all pending transactions
+   * @returns {Array} Pending transactions
+   */
+  getAllPendingTransactions() {
+    return Array.from(this.pendingTransactions.entries()).map(([hash, data]) => ({
+      hash,
+      ...data,
+    }));
+  },
   /**
    * Initialize the Soroban smart contract
    * Only for issuers/admins
@@ -19,10 +76,19 @@ const sorobanService = {
         issuer_key: issuerKey,
         asset_code: assetCode
       });
+      
+      if (response.data.transactionHash) {
+        this.trackTransaction(response.data.transactionHash, {
+          type: 'initialize',
+          issuerKey,
+          assetCode,
+        });
+      }
+      
       return response.data;
     } catch (error) {
       console.error('Failed to initialize contract:', error);
-      throw error;
+      throw this.enhanceError(error, 'Contract initialization');
     }
   },
 
@@ -42,10 +108,20 @@ const sorobanService = {
         description,
         expires_at: expiresAt
       });
+      
+      if (response.data.transaction?.transactionHash) {
+        this.trackTransaction(response.data.transaction.transactionHash, {
+          type: 'issue',
+          beneficiaryId,
+          amount,
+          description,
+        });
+      }
+      
       return response.data;
     } catch (error) {
       console.error('Failed to issue credits:', error);
-      throw error;
+      throw this.enhanceError(error, 'Credit issuance');
     }
   },
 
@@ -53,10 +129,20 @@ const sorobanService = {
    * Transfer credits between accounts
    * @param {string} toKey - Recipient's Stellar public key
    * @param {number} amount - Amount to transfer
-   * @param {string} description - Transfer description
-   * @returns {Promise} Transaction result
-   */
-  async transferCredits(toKey, amount, description) {
+   * @
+      if (response.data.transactionHash) {
+        this.trackTransaction(response.data.transactionHash, {
+          type: 'transfer',
+          toKey,
+          amount,
+          description,
+        });
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Failed to transfer credits:', error);
+      throw this.enhanceError(error, 'Credit transfer')redits(toKey, amount, description) {
     try {
       const response = await api.post('/soroban/transfer', {
         to: toKey,
@@ -74,10 +160,20 @@ const sorobanService = {
    * Burn (redeem) credits at a school
    * @param {number} amount - Amount of credits to burn
    * @param {string} schoolId - Database ID of the school
-   * @param {string} description - Redemption description
-   * @returns {Promise} Redemption and transaction data
-   */
-  async burnCredits(amount, schoolId, description) {
+   * @
+      if (response.data.transactionHash) {
+        this.trackTransaction(response.data.transactionHash, {
+          type: 'burn',
+          amount,
+          schoolId,
+          description,
+        });
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Failed to burn credits:', error);
+      throw this.enhanceError(error, 'Credit redemption')ts(amount, schoolId, description) {
     try {
       const response = await api.post('/soroban/burn', {
         amount,
@@ -177,7 +273,119 @@ const sorobanService = {
       };
     } catch (error) {
       console.error('Failed to get balance with allocation:', error);
-      throw error;
+      throw this.enhanceError(error, 'Balance retrieval');
+    }
+  },
+
+  /**
+   * Enhance error with user-friendly message
+   * @param {Error} error - Original error
+   * @param {string} operation - Operation that failed
+   * @returns {Error} Enhanced error
+   */
+  enhanceError(error, operation) {
+    const messages = {
+      'Network Error': 'Unable to connect to Stellar network. Please check your connection.',
+      'timeout': 'Transaction timeout. Please try again.',
+      '401': 'Authentication required. Please log in.',
+      '403': 'You do not have permission to perform this action.',
+      '404': 'Resource not found.',
+      'insufficient balance': 'Insufficient credits for this transaction.',
+      'expired': 'Credits have expired.',
+    };
+
+    let userMessage = `${operation} failed`;
+    
+    for (const [key, msg] of Object.entries(messages)) {
+      if (error.message?.includes(key) || error.response?.status?.toString() === key) {
+        userMessage = msg;
+        break;
+      }
+    }
+
+    const enhancedError = new Error(userMessage);
+    enhancedError.originalError = error;
+    enhancedError.operation = operation;
+    
+    return enhancedError;
+  },
+
+  /**
+   * Format amount for display
+   * @param {number} amount - Amount in stroops or smallest unit
+   * @param {number} decimals - Decimal places
+   * @returns {string} Formatted amount
+   */
+  formatAmount(amount, decimals = 2) {
+    return (amount / Math.pow(10, 7)).toFixed(decimals);
+  },
+
+  /**
+   * Validate Stellar public key format
+   * @param {string} key - Public key to validate
+   * @returns {boolean} True if valid
+   */
+  isValidPublicKey(key) {
+    return /^G[A-Z0-9]{55}$/.test(key);
+  },
+
+  /**
+   * Estimate transaction fee
+   * @param {string} operationType - Type of operation
+   * @returns {number} Estimated fee in stroops
+   */
+  estimateFee(operationType) {
+    const baseFees = {
+      'issue': 100000,
+      'transfer': 50000,
+      'burn': 50000,
+      'initialize': 150000,
+    };
+
+    return baseFees[operationType] || 100000;
+  },
+
+  /**
+   * Check if credits will expire soon
+   * @param {string} expirationDate - ISO date string
+   * @param {number} daysThreshold - Days before considering "soon"
+   * @returns {boolean} True if expiring soon
+   */
+  isExpiringSoon(expirationDate, daysThreshold = 7) {
+    if (!expirationDate) return false;
+    
+    const expDate = new Date(expirationDate);
+    const daysUntil = (expDate - new Date()) / (1000 * 60 * 60 * 24);
+    
+    return daysUntil > 0 && daysUntil <= daysThreshold;
+  },
+
+  /**
+   * Get Stellar explorer URL for transaction
+   * @param {string} txHash - Transaction hash
+   * @param {string} network - 'testnet' or 'public'
+   * @returns {string} Explorer URL
+   */
+  getExplorerUrl(txHash, network = 'testnet') {
+    const baseUrl = network === 'testnet' 
+      ? 'https://stellar.expert/explorer/testnet'
+      : 'https://stellar.expert/explorer/public';
+    
+    return `${baseUrl}/tx/${txHash}`;
+  },
+
+  /**
+   * Batch get balances for multiple keys
+   * @param {Array<string>} keys - Array of public keys
+   * @returns {Promise<Object>} Map of key to balance
+   */
+  async batchGetBalances(keys) {
+    try {
+      const response = await api.post('/soroban/batch-balances', { keys });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to batch get balances:', error);
+      throw this.enhanceError(error, 'Batch balance retrieval');
     }
   }
 };
