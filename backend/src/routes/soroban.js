@@ -365,4 +365,135 @@ router.get('/total-issued', auth, async (req, res) => {
   }
 });
 
+/**
+ * @route   GET /api/soroban/health
+ * @desc    Check Soroban contract health and connectivity
+ * @access  Public
+ */
+router.get('/health', async (req, res) => {
+  try {
+    const contractId = process.env.SOROBAN_CONTRACT_ID;
+    
+    if (!contractId) {
+      return res.status(503).json({
+        success: false,
+        status: 'unhealthy',
+        message: 'Soroban contract not configured',
+        details: {
+          contractId: null,
+          network: process.env.STELLAR_NETWORK || 'unknown',
+        }
+      });
+    }
+
+    // Use the service's health check method
+    const healthStatus = await sorobanService.healthCheck();
+    
+    if (!healthStatus.healthy) {
+      return res.status(503).json({
+        success: false,
+        status: 'unhealthy',
+        message: 'Stellar network unreachable',
+        details: {
+          contractId,
+          network: process.env.STELLAR_NETWORK || 'testnet',
+          error: healthStatus.error,
+        }
+      });
+    }
+
+    // Try to get total issued as an additional health check
+    const total = await sorobanService.getTotalIssued();
+
+    res.json({
+      success: true,
+      status: 'healthy',
+      message: 'Soroban contract is operational',
+      details: {
+        contractId,
+        network: healthStatus.network,
+        latestLedger: healthStatus.latestLedger,
+        rpcUrl: process.env.SOROBAN_RPC_URL || 'using default',
+        totalIssued: total,
+        timestamp: new Date().toISOString(),
+      }
+    });
+  } catch (error) {
+    console.error('Soroban health check error:', error);
+    res.status(503).json({
+      success: false,
+      status: 'unhealthy',
+      message: 'Failed to connect to Soroban contract',
+      error: error.message,
+      details: {
+        contractId: process.env.SOROBAN_CONTRACT_ID || null,
+        network: process.env.STELLAR_NETWORK || 'unknown',
+      }
+    });
+  }
+});
+
+/**
+ * @route   POST /api/soroban/batch-balances
+ * @desc    Get balances for multiple public keys
+ * @access  Private
+ */
+router.post(
+  '/batch-balances',
+  [
+    auth,
+    body('keys').isArray({ min: 1, max: 50 }).withMessage('Keys must be an array (1-50 items)'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { keys } = req.body;
+      const balances = await sorobanService.batchGetBalances(keys);
+
+      res.json({
+        success: true,
+        balances,
+        count: Object.keys(balances).length,
+      });
+    } catch (error) {
+      console.error('Batch balance retrieval error:', error);
+      res.status(500).json({
+        message: 'Failed to retrieve batch balances',
+        error: error.message,
+      });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/soroban/clear-cache
+ * @desc    Clear the read operation cache
+ * @access  Private (Admin/Issuer only)
+ */
+router.post('/clear-cache', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'issuer' && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Only admins can clear cache' });
+    }
+
+    const { key } = req.body;
+    sorobanService.clearCache(key);
+
+    res.json({
+      success: true,
+      message: key ? `Cache cleared for key: ${key}` : 'All cache cleared',
+    });
+  } catch (error) {
+    console.error('Cache clear error:', error);
+    res.status(500).json({
+      message: 'Failed to clear cache',
+      error: error.message,
+    });
+  }
+});
+
 module.exports = router;
