@@ -81,6 +81,16 @@ EduPass eliminates these inefficiencies by leveraging Stellar blockchain and Sor
 - **Transaction Tracking** - Track in-progress operations with visual indicators
 - **Enhanced Error Handling** - User-friendly messages with recovery suggestions
 
+### 📱 QR Code Integration (NEW!)
+- **Payment Requests** - Schools generate QR codes for specific payment amounts
+- **Receive Credits** - Students display QR codes for receiving credits
+- **Transaction Receipts** - QR codes linking to blockchain explorer for verification
+- **Account Sharing** - Share Stellar public keys with metadata via QR
+- **Quick Scan** - One-click scanner for mobile transactions
+- **Auto-Fill Forms** - Scanned QR codes automatically populate payment details
+- **Download & Share** - Save QR codes as images for offline sharing
+- **SEP-0007 Compatible** - Standard Stellar payment URI format
+
 ### 🔐 Phase 1: Advanced Stellar Features (NEW!)
 - **Clawback** - Revoke credits from accounts (fraud prevention, expired credits)
   - Immediate credit recovery from fraudulent or compromised accounts
@@ -153,9 +163,13 @@ edupass/
 │   │   │   ├── SorobanExample.jsx      # Complete integration demo
 │   │   │   ├── ClawbackManager.jsx     # Phase 1: Clawback & authorization UI
 │   │   │   ├── MultiSigManager.jsx     # Phase 1: Multi-sig management UI
+│   │   │   ├── QRCode.jsx              # QR code generation components (NEW!)
+│   │   │   ├── QRScanner.jsx           # QR code scanner component (NEW!)
 │   │   │   └── Navigation.jsx
 │   │   ├── hooks/             # Custom React hooks
 │   │   │   └── useSoroban.js  # Soroban interaction hooks
+│   │   ├── utils/             # Utility functions
+│   │   │   └── qrCodeUtils.js # QR code generation & parsing (NEW!)
 │   │   ├── pages/             # Dashboard pages
 │   │   ├── services/          # API service layer
 │   │   │   ├── sorobanService.js       # Enhanced Soroban service
@@ -173,6 +187,7 @@ edupass/
 │   ├── SOROBAN_ENHANCED.md    # Enhanced features guide
 │   ├── SOROBAN_QUICKSTART.md  # Quick start guide
 │   ├── PHASE1_FEATURES.md     # Phase 1: Clawback, authorization, multi-sig (NEW!)
+│   ├── QR_CODE_GUIDE.md       # QR code integration guide (NEW!)
 │   └── DEPLOYMENT.md          # Production deployment
 ├── scripts/                   # Utility scripts
 │   ├── create-issuer.js       # Stellar account creator
@@ -180,10 +195,11 @@ edupass/
 │   ├── phase1-migration.sql   # Phase 1 database migration (NEW!)
 │   ├── setup-database.bat     # Windows database setup
 │   ├── setup-database.sh      # Linux/Mac database setup
-│   ├── build-contract.bat/.sh # Smart contract build scripts
-│   ├── deploy-contract.bat/.sh # Contract deployment scripts
-│   ├── soroban-*.bat/.sh      # Soroban utility scripts
-│   └── test-contract.bat/.sh  # Contract testing scripts
+│   ├── install-soroban.bat/.sh # Soroban CLI installation (NEW!)
+│   ├── build-contract.bat/.sh # Smart contract build scripts (NEW!)
+│   ├── deploy-contract.bat/.sh # Contract deployment scripts (NEW!)
+│   ├── soroban-*.bat/.sh      # Soroban utility scripts (NEW!)
+│   └── test-contract.bat/.sh  # Contract testing scripts (NEW!)
 ├── setup.bat                  # Windows setup script
 ├── setup.sh                   # Linux/Mac setup script
 ├── .env.example               # Environment template
@@ -378,6 +394,8 @@ Manage education credit distribution:
 ### Beneficiary (Student)
 Receive and use education credits:
 - View credit balance in real-time
+- **Display QR code** to receive credits from donors/issuers
+- **Scan payment requests** from schools for quick checkout
 - Transfer credits to educational institutions
 - View complete transaction history
 - Get proof of funding
@@ -387,6 +405,8 @@ Receive and use education credits:
 
 ### School/Institution
 Accept and redeem education credits:
+- **Generate payment request QR codes** with amount and purpose
+- **Scan student QR codes** for manual credit transfers
 - Receive credit transfers from students
 - View pending transactions
 - Redeem credits for payment
@@ -477,6 +497,69 @@ const { balance } = useBalance(publicKey, 30000); // Poll every 30s
 📖 **Full Documentation**: [Soroban Enhanced Features Guide](docs/SOROBAN_ENHANCED.md)  
 🚀 **Quick Start**: [5-Minute Soroban Setup](docs/SOROBAN_QUICKSTART.md)
 
+## 📱 QR Code Features
+
+EduPass includes comprehensive QR code integration for seamless mobile transactions using industry-standard Stellar SEP-0007 payment URIs.
+
+### Key Features
+
+- **📥 Receive QR Codes** - Students display scannable QR codes containing their Stellar public key
+- **💰 Payment Requests** - Schools generate QR codes with specific amounts and purposes
+- **📷 Quick Scanner** - One-click camera scanner with auto-form-fill
+- **📄 Transaction Receipts** - QR codes linking to blockchain explorer for verification
+- **🔗 SEP-0007 Compatible** - Standard Stellar payment URI format works with all Stellar wallets
+- **💾 Download & Share** - Save QR codes as images for offline/print use
+- **🎯 Smart Parsing** - Automatically detects and parses multiple QR formats
+
+### QR Code Components
+
+Ready-to-use React components:
+
+```jsx
+import { ReceiveQRCode, PaymentRequestQRCode, QRCodeModal } from '../components/QRCode';
+import { QuickScanButton, QRScannerModal } from '../components/QRScanner';
+
+// Show student's receive QR
+<ReceiveQRCode
+  publicKey={user.stellarPublicKey}
+  assetCode="EDUPASS"
+  studentName="Alice Johnson"
+/>
+
+// Generate payment request
+<PaymentRequestQRCode
+  destination={school.publicKey}
+  amount="500"
+  memo="Semester Tuition"
+  schoolName="Springfield University"
+/>
+
+// Quick scan button
+<QuickScanButton
+  onScan={(parsed) => handleScan(parsed)}
+  buttonText="📷 Scan Payment QR"
+/>
+```
+
+### Use Cases
+
+**1. Student Receives Credits**
+```
+Student → "Show My QR Code" → Donor scans → Credits sent
+```
+
+**2. Student Pays School**  
+```
+School → "Create Payment Request" → Student scans → Form auto-fills → Payment sent
+```
+
+**3. Transaction Verification**
+```
+After payment → Receipt QR → Anyone scans → Blockchain explorer shows proof
+```
+
+📖 **Full Guide**: [QR Code Integration Guide](docs/QR_CODE_GUIDE.md)
+
 ## Technology Stack
 
 ### Backend
@@ -517,6 +600,7 @@ Comprehensive guides for developers and users:
 - [**Soroban Enhanced Features**](docs/SOROBAN_ENHANCED.md) - **NEW!** Retry logic, caching, hooks, and components
 - [**Soroban Quick Start**](docs/SOROBAN_QUICKSTART.md) - **NEW!** Get started with Soroban in 5 minutes
 - [**Phase 1 Advanced Features**](docs/PHASE1_FEATURES.md) - **NEW!** Clawback, asset authorization, and multi-signature
+- [**QR Code Integration Guide**](docs/QR_CODE_GUIDE.md) - **NEW!** Mobile payments with QR codes
 - [**Deployment Guide**](docs/DEPLOYMENT.md) - Production deployment on VPS, Docker, Heroku, etc.
 
 ## Testing
@@ -614,6 +698,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Soroban API routes** (REST endpoints for contract operations)
 - **Frontend Soroban service** (React integration for smart contracts)
 - **Soroban integration documentation** (comprehensive guide)
+- **QR code generation components** (4 specialized QR types)
+- **QR code scanner component** (camera-based with auto-parsing)
+- **QR code utilities** (SEP-0007 URI generation, validation, parsing)
+- **Soroban build & deploy scripts** (14 cross-platform automation scripts)
 
 ### 🚀 NEW: Enhanced Soroban Features (Feb 2026)
 - ✅ **Transaction Retry Logic** - Auto-retry with exponential backoff
@@ -629,6 +717,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ **Utility Functions** - Validation, formatting, explorer URLs
 - ✅ **UI Components** - SorobanStatus, SorobanExample widgets
 - ✅ **Enhanced Documentation** - 2 new comprehensive guides
+
+### 📱 NEW: QR Code Integration (Feb 2026)
+- ✅ **QR Code Components** - ReceiveQR, PaymentRequestQR, TransactionQR, AccountQR
+- ✅ **QR Scanner** - Camera-based scanner with auto-parsing
+- ✅ **SEP-0007 Support** - Standard Stellar payment URI format
+- ✅ **Utility Functions** - Generate, parse, validate, format QR data
+- ✅ **Dashboard Integration** - QR features in student & school dashboards
+- ✅ **Download & Share** - Save QR codes as PNG images
+- ✅ **Auto-Fill Forms** - Scanned QR data populates payment forms
+- ✅ **Multi-Format Support** - URIs, JSON, plain text, transaction URLs
+- ✅ **QR Code Documentation** - Comprehensive integration guide
 
 ### 📋 Setup Progress
 - ✅ Repository structure complete
@@ -698,9 +797,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Project Stats
 
-- **Files**: 67+
-- **Lines of Code**: 13,000+
-- **Documentation Pages**: 9
+- **Files**: 75+
+- **Lines of Code**: 15,000+
+- **Documentation Pages**: 10
 - **Supported Roles**: 3
 - **Database Tables**: 14 (9 core + 5 Phase 1)
 - **Database Scripts**: 4 (setup SQL, Phase 1 migration, Windows, Linux/Mac)
@@ -708,9 +807,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Backend Routes**: 7 (auth, issuer, school, beneficiary, transactions, soroban, advanced)
 - **API Endpoints**: 44+ (30 core + 14 Phase 1 advanced features)
 - **React Hooks**: 3 (useSoroban, useBalance, usePendingTransactions)
-- **UI Components**: 12+ (including Soroban widgets + Phase 1 admin panels)
-- **Build Scripts**: 14 (contract build, deploy, test)
-- **Latest Update**: Phase 1 Advanced Features (clawback, authorization, multi-signature)
+- **UI Components**: 16+ (dashboards, Soroban widgets, Phase 1 admin, QR codes)
+- **QR Components**: 7 (ReceiveQR, PaymentQR, TransactionQR, AccountQR, Scanner, Modal, QuickScan)
+- **Build Scripts**: 14 (Soroban install, build, deploy, initialize, test - Windows/Linux)
+- **Utility Functions**: 25+ (QR generation, parsing, validation, formatting)
+- **Latest Update**: QR Code Integration + Soroban Deployment Scripts
 - **Stellar SDK**: @stellar/stellar-sdk v12.3.0
 
 ---
