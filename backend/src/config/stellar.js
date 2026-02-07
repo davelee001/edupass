@@ -227,6 +227,361 @@ const getTransactionHistory = async (publicKey, limit = 10) => {
   }
 };
 
+// ============================================================================
+// PHASE 1: CLAWBACK OPERATIONS
+// ============================================================================
+
+/**
+ * Set asset authorization flags on issuer account
+ * Enables AUTH_REQUIRED, AUTH_REVOCABLE, and AUTH_CLAWBACK_ENABLED
+ */
+const enableAssetControls = async (issuerSecretKey) => {
+  try {
+    const issuerKeypair = StellarSdk.Keypair.fromSecret(issuerSecretKey);
+    const issuerAccount = await server.loadAccount(issuerKeypair.publicKey());
+    
+    const transaction = new StellarSdk.TransactionBuilder(issuerAccount, {
+      fee: await server.fetchBaseFee(),
+      networkPassphrase: isTestnet 
+        ? StellarSdk.Networks.TESTNET 
+        : StellarSdk.Networks.PUBLIC
+    })
+      .addOperation(StellarSdk.Operation.setOptions({
+        setFlags: StellarSdk.AuthRevocableFlag | 
+                  StellarSdk.AuthRequiredFlag | 
+                  StellarSdk.AuthClawbackEnabledFlag
+      }))
+      .setTimeout(30)
+      .build();
+    
+    transaction.sign(issuerKeypair);
+    const result = await server.submitTransaction(transaction);
+    
+    logger.info('Asset authorization controls enabled successfully');
+    return result;
+  } catch (error) {
+    logger.error('Error enabling asset controls:', error);
+    throw error;
+  }
+};
+
+/**
+ * Authorize an account to hold the asset
+ * Required when AUTH_REQUIRED flag is set
+ */
+const authorizeAccount = async (issuerSecretKey, accountPublicKey) => {
+  try {
+    const issuerKeypair = StellarSdk.Keypair.fromSecret(issuerSecretKey);
+    const issuerAccount = await server.loadAccount(issuerKeypair.publicKey());
+    
+    const transaction = new StellarSdk.TransactionBuilder(issuerAccount, {
+      fee: await server.fetchBaseFee(),
+      networkPassphrase: isTestnet 
+        ? StellarSdk.Networks.TESTNET 
+        : StellarSdk.Networks.PUBLIC
+    })
+      .addOperation(StellarSdk.Operation.setTrustLineFlags({
+        trustor: accountPublicKey,
+        asset: edupassAsset,
+        flags: {
+          authorized: true
+        }
+      }))
+      .setTimeout(30)
+      .build();
+    
+    transaction.sign(issuerKeypair);
+    const result = await server.submitTransaction(transaction);
+    
+    logger.info(`Account ${accountPublicKey} authorized successfully`);
+    return result;
+  } catch (error) {
+    logger.error('Error authorizing account:', error);
+    throw error;
+  }
+};
+
+/**
+ * Revoke authorization from an account
+ * Freezes the account's ability to send/receive credits
+ */
+const revokeAccountAuthorization = async (issuerSecretKey, accountPublicKey) => {
+  try {
+    const issuerKeypair = StellarSdk.Keypair.fromSecret(issuerSecretKey);
+    const issuerAccount = await server.loadAccount(issuerKeypair.publicKey());
+    
+    const transaction = new StellarSdk.TransactionBuilder(issuerAccount, {
+      fee: await server.fetchBaseFee(),
+      networkPassphrase: isTestnet 
+        ? StellarSdk.Networks.TESTNET 
+        : StellarSdk.Networks.PUBLIC
+    })
+      .addOperation(StellarSdk.Operation.setTrustLineFlags({
+        trustor: accountPublicKey,
+        asset: edupassAsset,
+        flags: {
+          authorized: false,
+          authorizedToMaintainLiabilities: true
+        }
+      }))
+      .setTimeout(30)
+      .build();
+    
+    transaction.sign(issuerKeypair);
+    const result = await server.submitTransaction(transaction);
+    
+    logger.info(`Account ${accountPublicKey} authorization revoked`);
+    return result;
+  } catch (error) {
+    logger.error('Error revoking account authorization:', error);
+    throw error;
+  }
+};
+
+/**
+ * Clawback credits from an account
+ * Removes credits from holder's account (fraud prevention)
+ */
+const clawbackCredits = async (issuerSecretKey, fromAccountPublicKey, amount, memo = 'Clawback') => {
+  try {
+    const issuerKeypair = StellarSdk.Keypair.fromSecret(issuerSecretKey);
+    const issuerAccount = await server.loadAccount(issuerKeypair.publicKey());
+    
+    const transactionBuilder = new StellarSdk.TransactionBuilder(issuerAccount, {
+      fee: await server.fetchBaseFee(),
+      networkPassphrase: isTestnet 
+        ? StellarSdk.Networks.TESTNET 
+        : StellarSdk.Networks.PUBLIC
+    })
+      .addOperation(StellarSdk.Operation.clawback({
+        from: fromAccountPublicKey,
+        asset: edupassAsset,
+        amount: amount.toString()
+      }));
+    
+    if (memo) {
+      transactionBuilder.addMemo(StellarSdk.Memo.text(memo));
+    }
+    
+    const transaction = transactionBuilder
+      .setTimeout(30)
+      .build();
+    
+    transaction.sign(issuerKeypair);
+    const result = await server.submitTransaction(transaction);
+    
+    logger.info(`Clawed back ${amount} ${ASSET_CODE} from ${fromAccountPublicKey}`);
+    return result;
+  } catch (error) {
+    logger.error('Error clawing back credits:', error);
+   
+
+ throw error;
+  }
+};
+
+// ============================================================================
+// PHASE 1: MULTI-SIGNATURE OPERATIONS
+// ============================================================================
+
+/**
+ * Add signer to account (for multi-sig)
+ */
+const addSigner = async (accountSecretKey, signerPublicKey, weight = 1) => {
+  try {
+    const accountKeypair = StellarSdk.Keypair.fromSecret(accountSecretKey);
+    const account = await server.loadAccount(accountKeypair.publicKey());
+    
+    const transaction = new StellarSdk.TransactionBuilder(account, {
+      fee: await server.fetchBaseFee(),
+      networkPassphrase: isTestnet 
+        ? StellarSdk.Networks.TESTNET 
+        : StellarSdk.Networks.PUBLIC
+    })
+      .addOperation(StellarSdk.Operation.setOptions({
+        signer: {
+          ed25519PublicKey: signerPublicKey,
+          weight: weight
+        }
+      }))
+      .setTimeout(30)
+      .build();
+    
+    transaction.sign(accountKeypair);
+    const result = await server.submitTransaction(transaction);
+    
+    logger.info(`Signer ${signerPublicKey} added to account ${accountKeypair.publicKey()}`);
+    return result;
+  } catch (error) {
+    logger.error('Error adding signer:', error);
+    throw error;
+  }
+};
+
+/**
+ * Remove signer from account
+ */
+const removeSigner = async (accountSecretKey, signerPublicKey) => {
+  try {
+    const accountKeypair = StellarSdk.Keypair.fromSecret(accountSecretKey);
+    const account = await server.loadAccount(accountKeypair.publicKey());
+    
+    const transaction = new StellarSdk.TransactionBuilder(account, {
+      fee: await server.fetchBaseFee(),
+      networkPassphrase: isTestnet 
+        ? StellarSdk.Networks.TESTNET 
+        : StellarSdk.Networks.PUBLIC
+    })
+      .addOperation(StellarSdk.Operation.setOptions({
+        signer: {
+          ed25519PublicKey: signerPublicKey,
+          weight: 0
+        }
+      }))
+      .setTimeout(30)
+      .build();
+    
+    transaction.sign(accountKeypair);
+    const result = await server.submitTransaction(transaction);
+    
+    logger.info(`Signer ${signerPublicKey} removed from account`);
+    return result;
+  } catch (error) {
+    logger.error('Error removing signer:', error);
+    throw error;
+  }
+};
+
+/**
+ * Set account thresholds for multi-sig requirements
+ */
+const setAccountThresholds = async (accountSecretKey, low = 0, medium = 1, high = 2) => {
+  try {
+    const accountKeypair = StellarSdk.Keypair.fromSecret(accountSecretKey);
+    const account = await server.loadAccount(accountKeypair.publicKey());
+    
+    const transaction = new StellarSdk.TransactionBuilder(account, {
+      fee: await server.fetchBaseFee(),
+      networkPassphrase: isTestnet 
+        ? StellarSdk.Networks.TESTNET 
+        : StellarSdk.Networks.PUBLIC
+    })
+      .addOperation(StellarSdk.Operation.setOptions({
+        lowThreshold: low,
+        medThreshold: medium,
+        highThreshold: high
+      }))
+      .setTimeout(30)
+      .build();
+    
+    transaction.sign(accountKeypair);
+    const result = await server.submitTransaction(transaction);
+    
+    logger.info(`Account thresholds set: low=${low}, medium=${medium}, high=${high}`);
+    return result;
+  } catch (error) {
+    logger.error('Error setting account thresholds:', error);
+    throw error;
+  }
+};
+
+/**
+ * Create multi-signed transaction (requires multiple signatures)
+ */
+const createMultiSigTransaction = async (sourcePublicKey, operations, memo = '') => {
+  try {
+    const sourceAccount = await server.loadAccount(sourcePublicKey);
+    
+    const transactionBuilder = new StellarSdk.TransactionBuilder(sourceAccount, {
+      fee: await server.fetchBaseFee(),
+      networkPassphrase: isTestnet 
+        ? StellarSdk.Networks.TESTNET 
+        : StellarSdk.Networks.PUBLIC
+    });
+    
+    // Add all operations
+    operations.forEach(op => transactionBuilder.addOperation(op));
+    
+    if (memo) {
+      transactionBuilder.addMemo(StellarSdk.Memo.text(memo));
+    }
+    
+    const transaction = transactionBuilder
+      .setTimeout(300) // 5 minutes for multi-sig collection
+      .build();
+    
+    // Return unsigned transaction (XDR) for signing by multiple parties
+    const xdr = transaction.toXDR();
+    
+    logger.info('Multi-sig transaction created');
+    return {
+      xdr,
+      hash: transaction.hash().toString('hex')
+    };
+  } catch (error) {
+    logger.error('Error creating multi-sig transaction:', error);
+    throw error;
+  }
+};
+
+/**
+ * Sign existing transaction with additional signature
+ */
+const signTransaction = async (transactionXDR, signerSecretKey) => {
+  try {
+    const transaction = new StellarSdk.Transaction(
+      transactionXDR,
+      isTestnet ? StellarSdk.Networks.TESTNET : StellarSdk.Networks.PUBLIC
+    );
+    
+    const keypair = StellarSdk.Keypair.fromSecret(signerSecretKey);
+    transaction.sign(keypair);
+    
+    logger.info(`Transaction signed by ${keypair.publicKey()}`);
+    return transaction.toXDR();
+  } catch (error) {
+    logger.error('Error signing transaction:', error);
+    throw error;
+  }
+};
+
+/**
+ * Submit multi-signed transaction
+ */
+const submitMultiSigTransaction = async (signedTransactionXDR) => {
+  try {
+    const transaction = new StellarSdk.Transaction(
+      signedTransactionXDR,
+      isTestnet ? StellarSdk.Networks.TESTNET : StellarSdk.Networks.PUBLIC
+    );
+    
+    const result = await server.submitTransaction(transaction);
+    
+    logger.info('Multi-sig transaction submitted successfully');
+    return result;
+  } catch (error) {
+    logger.error('Error submitting multi-sig transaction:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get account signers and thresholds
+ */
+const getAccountSigners = async (publicKey) => {
+  try {
+    const account = await server.loadAccount(publicKey);
+    
+    return {
+      signers: account.signers,
+      thresholds: account.thresholds
+    };
+  } catch (error) {
+    logger.error('Error getting account signers:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   server,
   edupassAsset,
@@ -241,5 +596,18 @@ module.exports = {
   issueCredits,
   transferCredits,
   burnCredits,
-  getTransactionHistory
+  getTransactionHistory,
+  // Phase 1: Clawback & Authorization
+  enableAssetControls,
+  authorizeAccount,
+  revokeAccountAuthorization,
+  clawbackCredits,
+  // Phase 1: Multi-signature
+  addSigner,
+  removeSigner,
+  setAccountThresholds,
+  createMultiSigTransaction,
+  signTransaction,
+  submitMultiSigTransaction,
+  getAccountSigners
 };
