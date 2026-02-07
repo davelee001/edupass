@@ -100,10 +100,10 @@ EduPass eliminates these inefficiencies by leveraging Stellar blockchain and Sor
   - MultiSigManager: manage signers, create/approve multi-sig transactions
 
 ### Developer-Friendly
-- **RESTful API** - Complete backend API with 30+ endpoints
+- **RESTful API** - Complete backend API with 44+ endpoints (30 core + 14 Phase 1)
 - **React components** - Pre-built dashboard UI components with Soroban widgets
 - **React Hooks** - Custom hooks for smart contract interactions
-- **Comprehensive docs** - 8 detailed documentation files
+- **Comprehensive docs** - 9 detailed documentation files
 - **Automated setup** - Cross-platform setup scripts included
 
 ## Quick Start
@@ -151,12 +151,15 @@ edupass/
 │   │   ├── components/        # React components
 │   │   │   ├── SorobanStatus.jsx       # Network health widget
 │   │   │   ├── SorobanExample.jsx      # Complete integration demo
+│   │   │   ├── ClawbackManager.jsx     # Phase 1: Clawback & authorization UI
+│   │   │   ├── MultiSigManager.jsx     # Phase 1: Multi-sig management UI
 │   │   │   └── Navigation.jsx
 │   │   ├── hooks/             # Custom React hooks
 │   │   │   └── useSoroban.js  # Soroban interaction hooks
 │   │   ├── pages/             # Dashboard pages
 │   │   ├── services/          # API service layer
 │   │   │   ├── sorobanService.js       # Enhanced Soroban service
+│   │   │   ├── advancedService.js      # Phase 1 features service
 │   │   │   └── api.js
 │   │   └── App.jsx
 │   ├── package.json
@@ -167,12 +170,14 @@ edupass/
 │   ├── DATABASE_SETUP.md      # Database setup guide
 │   ├── STELLAR_GUIDE.md       # Blockchain integration
 │   ├── SOROBAN_INTEGRATION.md # Smart contract architecture
-│   ├── SOROBAN_ENHANCED.md    # Enhanced features guide (NEW!)
-│   ├── SOROBAN_QUICKSTART.md  # Quick start guide (NEW!)
+│   ├── SOROBAN_ENHANCED.md    # Enhanced features guide
+│   ├── SOROBAN_QUICKSTART.md  # Quick start guide
+│   ├── PHASE1_FEATURES.md     # Phase 1: Clawback, authorization, multi-sig (NEW!)
 │   └── DEPLOYMENT.md          # Production deployment
 ├── scripts/                   # Utility scripts
 │   ├── create-issuer.js       # Stellar account creator
 │   ├── setup-database.sql     # PostgreSQL setup script
+│   ├── phase1-migration.sql   # Phase 1 database migration (NEW!)
 │   ├── setup-database.bat     # Windows database setup
 │   ├── setup-database.sh      # Linux/Mac database setup
 │   ├── build-contract.bat/.sh # Smart contract build scripts
@@ -693,17 +698,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Project Stats
 
-- **Files**: 60+
-- **Lines of Code**: 10,000+
-- **Documentation Pages**: 8
+- **Files**: 67+
+- **Lines of Code**: 13,000+
+- **Documentation Pages**: 9
 - **Supported Roles**: 3
-- **Database Scripts**: 3 (SQL, Windows, Linux/Mac)
+- **Database Tables**: 14 (9 core + 5 Phase 1)
+- **Database Scripts**: 4 (setup SQL, Phase 1 migration, Windows, Linux/Mac)
 - **Smart Contract Functions**: 7 (Soroban)
-- **API Endpoints**: 30+
+- **Backend Routes**: 7 (auth, issuer, school, beneficiary, transactions, soroban, advanced)
+- **API Endpoints**: 44+ (30 core + 14 Phase 1 advanced features)
 - **React Hooks**: 3 (useSoroban, useBalance, usePendingTransactions)
-- **UI Components**: 10+ including Soroban widgets
+- **UI Components**: 12+ (including Soroban widgets + Phase 1 admin panels)
 - **Build Scripts**: 14 (contract build, deploy, test)
-- **Latest Update**: Enhanced Soroban integration with retry logic, caching, and React hooks
+- **Latest Update**: Phase 1 Advanced Features (clawback, authorization, multi-signature)
 - **Stellar SDK**: @stellar/stellar-sdk v12.3.0
 
 ---
