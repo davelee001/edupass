@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Send, History, School as SchoolIcon } from 'lucide-react';
+import { Wallet, Send, History, School as SchoolIcon, QrCode } from 'lucide-react';
 import { getBalance, getSchools, transferToSchool, getBeneficiaryTransactions } from '../services/api';
+import { ReceiveQRCode, QRCodeModal } from '../components/QRCode';
+import { QuickScanButton } from '../components/QRScanner';
 
 function BeneficiaryDashboard({ user }) {
   const [balance, setBalance] = useState(0);
@@ -8,6 +10,7 @@ function BeneficiaryDashboard({ user }) {
   const [transactions, setTransactions] = useState([]);
   const [showTransferForm, setShowTransferForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showQRModal, setShowQRModal] = useState(false);
   const [formData, setFormData] = useState({
     schoolId: '',
     amount: '',
@@ -58,6 +61,29 @@ function BeneficiaryDashboard({ user }) {
     }
   };
 
+  const handleQRScan = (parsed, raw) => {
+    console.log('Scanned QR:', parsed);
+    
+    if (parsed.type === 'stellar-uri' && parsed.action === 'pay') {
+      // Auto-fill form with scanned payment request
+      const school = schools.find(s => s.stellar_public_key === parsed.destination);
+      if (school) {
+        setFormData({
+          schoolId: school.id.toString(),
+          amount: parsed.amount || '',
+          purpose: parsed.memo || 'School Fees',
+          invoiceNumber: ''
+        });
+        setShowTransferForm(true);
+        setMessage({ type: 'success', text: 'Payment request scanned! Review and confirm.' });
+      } else {
+        setMessage({ type: 'error', text: 'School not found in your network.' });
+      }
+    } else {
+      setMessage({ type: 'error', text: 'Invalid payment QR code format.' });
+    }
+  };
+
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
@@ -83,8 +109,8 @@ function BeneficiaryDashboard({ user }) {
         </div>
       </div>
 
-      {/* Transfer Button */}
-      <div className="mb-6">
+      {/* Action Buttons */}
+      <div className="mb-6 flex flex-wrap gap-3">
         <button
           onClick={() => setShowTransferForm(!showTransferForm)}
           className="btn-primary"
@@ -93,7 +119,32 @@ function BeneficiaryDashboard({ user }) {
           <Send className="h-4 w-4 inline mr-2" />
           Pay School
         </button>
+        
+        <button
+          onClick={() => setShowQRModal(true)}
+          className="btn-secondary"
+        >
+          <QrCode className="h-4 w-4 inline mr-2" />
+          Show My QR Code
+        </button>
+
+        <QuickScanButton
+          onScan={handleQRScan}
+          onError={(err) => console.error('Scan error:', err)}
+          buttonText="📷 Scan Payment Request"
+          className="btn-secondary"
+        />
       </div>
+
+      {/* QR Code Modal */}
+      <QRCodeModal isOpen={showQRModal} onClose={() => setShowQRModal(false)}>
+        <ReceiveQRCode
+          publicKey={user.stellarPublicKey}
+          assetCode="EDUPASS"
+          assetIssuer={process.env.REACT_APP_ISSUER_PUBLIC_KEY}
+          studentName={user.fullName || user.email}
+        />
+      </QRCodeModal>
 
       {/* Transfer Form */}
       {showTransferForm && (
