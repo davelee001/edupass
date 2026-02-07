@@ -69,7 +69,7 @@ EduPass eliminates these inefficiencies by leveraging Stellar blockchain and Sor
 - **Built-in reporting** - Transaction analytics and statistics
 - **Dual storage** - Blockchain for immutability + PostgreSQL for queries
 
-### 🚀 Enhanced Soroban Integration (NEW!)
+### 🚀 Enhanced Soroban Integration
 - **Transaction Retry Logic** - Automatic retry on transient failures (up to 3 attempts)
 - **Transaction Confirmation** - Wait for ledger confirmation before success
 - **Pre-Submit Simulation** - Validate transactions before on-chain execution
@@ -80,6 +80,24 @@ EduPass eliminates these inefficiencies by leveraging Stellar blockchain and Sor
 - **React Hooks** - `useSoroban`, `useBalance`, `usePendingTransactions`
 - **Transaction Tracking** - Track in-progress operations with visual indicators
 - **Enhanced Error Handling** - User-friendly messages with recovery suggestions
+
+### 🔐 Phase 1: Advanced Stellar Features (NEW!)
+- **Clawback** - Revoke credits from accounts (fraud prevention, expired credits)
+  - Immediate credit recovery from fraudulent or compromised accounts
+  - Audit trail for all clawback operations
+  - Configurable reasons: fraud, expiration, refund, violation
+- **Asset Authorization** - Control who can hold EDUPASS credits (KYC/AML compliance)
+  - AUTH_REQUIRED flag ensures only verified accounts can hold credits
+  - AUTH_REVOCABLE allows freezing suspicious accounts
+  - Authorization history tracking
+- **Multi-Signature** - Require multiple approvals for high-value transactions (governance)
+  - 2-of-3+ signature workflows for transactions >$1,000
+  - Configurable thresholds (low/medium/high operations)
+  - Pending transaction management with approval tracking
+  - Prevents single-point-of-failure attacks
+- **Admin UI Components** - React components for managing advanced features
+  - ClawbackManager: freeze accounts, clawback credits, view history
+  - MultiSigManager: manage signers, create/approve multi-sig transactions
 
 ### Developer-Friendly
 - **RESTful API** - Complete backend API with 30+ endpoints
@@ -493,6 +511,7 @@ Comprehensive guides for developers and users:
 - [**Soroban Integration Guide**](docs/SOROBAN_INTEGRATION.md) - Smart contract integration architecture and usage
 - [**Soroban Enhanced Features**](docs/SOROBAN_ENHANCED.md) - **NEW!** Retry logic, caching, hooks, and components
 - [**Soroban Quick Start**](docs/SOROBAN_QUICKSTART.md) - **NEW!** Get started with Soroban in 5 minutes
+- [**Phase 1 Advanced Features**](docs/PHASE1_FEATURES.md) - **NEW!** Clawback, asset authorization, and multi-signature
 - [**Deployment Guide**](docs/DEPLOYMENT.md) - Production deployment on VPS, Docker, Heroku, etc.
 
 ## Testing
