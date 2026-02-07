@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Wallet, CheckCircle, Clock, TrendingUp } from 'lucide-react';
+import { Wallet, CheckCircle, Clock, TrendingUp, QrCode } from 'lucide-react';
 import { getSchoolBalance, getPendingTransactions, redeemCredits, getSchoolStats } from '../services/api';
+import { PaymentRequestQRCode, AccountQRCode, QRCodeModal } from '../components/QRCode';
+import { QuickScanButton } from '../components/QRScanner';
 
 function SchoolDashboard({ user }) {
   const [balance, setBalance] = useState(0);
@@ -8,6 +10,12 @@ function SchoolDashboard({ user }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [redeeming, setRedeeming] = useState(null);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrMode, setQrMode] = useState('account'); // 'account' or 'payment'
+  const [paymentQRData, setPaymentQRData] = useState({
+    amount: '',
+    memo: ''
+  });
   const [redeemData, setRedeemData] = useState({
     serviceType: '',
     invoiceNumber: ''
@@ -59,6 +67,28 @@ function SchoolDashboard({ user }) {
     }
   };
 
+  const handleQRScan = (parsed, raw) => {
+    console.log('Scanned QR:', parsed);
+    
+    if (parsed.type === 'public-key') {
+      setMessage({ type: 'success', text: `Student account scanned: ${parsed.publicKey.substring(0, 12)}...` });
+    } else if (parsed.type === 'json' && parsed.publicKey) {
+      setMessage({ type: 'success', text: `${parsed.name || 'Student'}'s account scanned!` });
+    } else {
+      setMessage({ type: 'info', text: 'QR code scanned. Use this for manual transfers.' });
+    }
+  };
+
+  const showPaymentQR = () => {
+    setQrMode('payment');
+    setShowQRModal(true);
+  };
+
+  const showAccountQR = () => {
+    setQrMode('account');
+    setShowQRModal(true);
+  };
+
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
@@ -79,6 +109,7 @@ function SchoolDashboard({ user }) {
               <p className="text-2xl font-bold text-primary-600">
                 {balance.toFixed(2)} EDUPASS
               </p>
+              <p className="text-xs text-gray-500 mt-1">Public Key: {user.stellarPublicKey?.substring(0, 12)}...</p>
             </div>
             <Wallet className="h-12 w-12 text-primary-600" />
           </div>
@@ -115,6 +146,73 @@ function SchoolDashboard({ user }) {
           {message.text}
         </div>
       )}
+
+      {/* QR Actions */}
+      <div className="mb-6 flex flex-wrap gap-3">
+        <button onClick={showAccountQR} className="btn-secondary">
+          <QrCode className="h-4 w-4 inline mr-2" />
+          My School QR
+        </button>
+        <button onClick={showPaymentQR} className="btn-secondary">
+          <QrCode className="h-4 w-4 inline mr-2" />
+          Create Payment Request
+        </button>
+        <QuickScanButton
+          onScan={handleQRScan}
+          onError={(err) => console.error('Scan error:', err)}
+          buttonText="📷 Scan Student QR"
+          className="btn-secondary"
+        />
+      </div>
+
+      {/* QR Code Modal */}
+      <QRCodeModal isOpen={showQRModal} onClose={() => setShowQRModal(false)}>
+        {qrMode === 'account' ? (
+          <AccountQRCode
+            publicKey={user.stellarPublicKey}
+            name={user.fullName || user.organization}
+            role="School"
+            email={user.email}
+          />
+        ) : (
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Generate Payment Request QR</h3>
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Amount (EDUPASS)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={paymentQRData.amount}
+                  onChange={(e) => setPaymentQRData({...paymentQRData, amount: e.target.value})}
+                  placeholder="100.00"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Purpose/Memo</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={paymentQRData.memo}
+                  onChange={(e) => setPaymentQRData({...paymentQRData, memo: e.target.value})}
+                  placeholder="School Fees - Semester 1"
+                />
+              </div>
+            </div>
+            {paymentQRData.amount && (
+              <PaymentRequestQRCode
+                destination={user.stellarPublicKey}
+                amount={paymentQRData.amount}
+                memo={paymentQRData.memo}
+                assetCode="EDUPASS"
+                assetIssuer={process.env.REACT_APP_ISSUER_PUBLIC_KEY}
+                schoolName={user.fullName || user.organization}
+              />
+            )}
+          </div>
+        )}
+      </QRCodeModal>
 
       {/* Pending Transactions */}
       <div className="card mb-6">
