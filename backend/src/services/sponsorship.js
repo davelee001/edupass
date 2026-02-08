@@ -292,11 +292,45 @@ async function recordSponsorship(sponsorId, sponsoredId, type, details = {}) {
   }
 }
 
+/**
+ * Get sponsor account balance and details
+ * @param {string} sponsorPublicKey - Public key of sponsor account
+ * @returns {Promise<object>}
+ */
+async function getSponsorBalance(sponsorPublicKey) {
+  try {
+    const account = await server.loadAccount(sponsorPublicKey);
+    
+    // Get XLM balance
+    const nativeBalance = account.balances.find(b => b.asset_type === 'native');
+    const xlmBalance = nativeBalance ? parseFloat(nativeBalance.balance) : 0;
+    
+    // Calculate available balance (total - reserves)
+    const baseReserve = 0.5; // Base reserve per entry
+    const numEntries = account.subentry_count;
+    const minimumBalance = (2 + numEntries) * baseReserve;
+    const availableBalance = Math.max(0, xlmBalance - minimumBalance);
+    
+    return {
+      publicKey: sponsorPublicKey,
+      xlmBalance,
+      minimumBalance,
+      availableBalance,
+      numSubentries: numEntries,
+      sequence: account.sequence
+    };
+  } catch (error) {
+    logger.error('Error getting sponsor balance:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   createSponsoredAccount,
   establishSponsoredTrustline,
   sponsorTransactionFees,
   revokeSponsorship,
   getSponsorshipInfo,
-  recordSponsorship
+  recordSponsorship,
+  getSponsorBalance
 };

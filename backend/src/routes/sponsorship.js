@@ -256,4 +256,84 @@ router.delete('/:accountId', [
   }
 });
 
+/**
+ * GET /sponsorship/balance - Get sponsor account balance and budget status
+ */
+router.get('/balance', [
+  authenticateToken,
+  requireRole('issuer')
+], async (req, res) => {
+  try {
+    // Get sponsor's public key
+    const sponsorResult = await pool.query(
+      'SELECT stellar_public_key FROM users WHERE id = $1',
+      [req.user.userId]
+    );
+
+    if (sponsorResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Sponsor account not found' });
+    }
+
+    const sponsorPublicKey = sponsorResult.rows[0].stellar_public_key;
+
+    // Get current balance
+    const balanceInfo = await sponsorshipService.getSponsorBalance(sponsorPublicKey);
+
+    // Calculate sponsorship stats
+    const statsResult = await pool.query(`
+      SELECT 
+        COUNT(*) as total_sponsored,
+        SUM(CASE WHEN sponsorship_type = 'account' THEN 1 ELSE 0 END) as account_creations,
+        SUM(CASE WHEN sponsorship_type = 'trustline' THEN 1 ELSE 0 END) as trustlines,
+        SUM(CASE WHEN sponsorship_type = 'transaction' THEN 1 ELSE 0 END) as transactions,
+        SUM(COALESCE(fee_paid::numeric, 0)) as total_fees_paid
+      FROM sponsorships 
+      WHERE sponsor_user_id = $1
+    `, [req.user.userId]);
+
+    const stats = statsResult.rows[0];
+
+    // Estimate operations remaining based on current balance
+    const avgFeePerOperation = parseFloat(stats.total_fees_paid) / parseInt(stats.total_sponsored) || 0.00001;
+    const operationsRemaining = balanceInfo.xlmBalance > 0 
+      ? Math.floor(balanceInfo.xlmBalance / avgFeePerOperation)
+      : 0;
+
+    // Budget status
+    const lowBalanceThreshold = 1.0; // 1 XLM
+    const criticalBalanceThreshold = 0.5; // 0.5 XLM
+    
+    let budgetStatus = 'healthy';
+    if (balanceInfo.xlmBalance < criticalBalanceThreshold) {
+      budgetStatus = 'critical';
+    } else if (balanceInfo.xlmBalance < lowBalanceThreshold) {
+      budgetStatus = 'low';
+    }
+
+    res.json({
+      balance: balanceInfo,
+      stats: {
+        totalSponsored: parseInt(stats.total_sponsored) || 0,
+        accountCreations: parseInt(stats.account_creations) || 0,
+        trustlines: parseInt(stats.trustlines) || 0,
+        transactions: parseInt(stats.transactions) || 0,
+        totalFeesPaid: parseFloat(stats.total_fees_paid) || 0,
+        avgFeePerOperation
+      },
+      budget: {
+        status: budgetStatus,
+        operationsRemaining,
+        daysRemaining: operationsRemaining > 0 
+          ? Math.floor(operationsRemaining / (parseInt(stats.total_sponsored) / 30 || 1))
+          : 0,
+        lowBalanceThreshold,
+        criticalBalanceThreshold
+      }
+    });
+  } catch (error) {
+    logger.error('Error getting sponsor balance:', error);
+    res.status(500).json({ error: error.message || 'Failed to get balance' });
+  }
+});
+
 module.exports = router;
