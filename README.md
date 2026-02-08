@@ -109,11 +109,31 @@ EduPass eliminates these inefficiencies by leveraging Stellar blockchain and Sor
   - ClawbackManager: freeze accounts, clawback credits, view history
   - MultiSigManager: manage signers, create/approve multi-sig transactions
 
+### 🌐 Phase 2: Federation & Sponsorship (NEW!)
+- **Federation Protocol** - Human-readable Stellar addresses (stellar.org SEP-2)
+  - Convert user@domain addresses to Stellar public keys
+  - Register and manage federation addresses for users
+  - Reverse lookup (public key to federation address)
+  - Simplifies payments with memorable addresses
+- **SEP-10 Authentication** - Secure wallet-based authentication
+  - Challenge-response authentication using Stellar keypairs
+  - No passwords needed - sign with your wallet
+  - JWT token generation for authenticated sessions
+  - Industry-standard authentication protocol
+- **Transaction Sponsorship** - Pay fees for other accounts
+  - Schools/NGOs sponsor transaction fees for students
+  - Zero-balance accounts can receive credits
+  - Sponsored account management and tracking
+  - Reduces barrier to entry for beneficiaries
+- **Enhanced UI Components** - Phase 2 management interfaces
+  - FederationManager: register/lookup federation addresses
+  - SponsorshipManager: sponsor accounts, track sponsored transactions
+
 ### Developer-Friendly
-- **RESTful API** - Complete backend API with 44+ endpoints (30 core + 14 Phase 1)
+- **RESTful API** - Complete backend API with 54+ endpoints (30 core + 14 Phase 1 + 10 Phase 2)
 - **React components** - Pre-built dashboard UI components with Soroban widgets
 - **React Hooks** - Custom hooks for smart contract interactions
-- **Comprehensive docs** - 9 detailed documentation files
+- **Comprehensive docs** - 10 detailed documentation files
 - **Automated setup** - Cross-platform setup scripts included
 
 ## Quick Start
@@ -144,7 +164,8 @@ edupass/
 ├── backend/                    # Node.js/Express API server
 │   ├── src/
 │   │   ├── config/            # Database & Stellar config
-│   │   ├── routes/            # API endpoints
+│   │   ├── routes/            # API endpoints (auth, issuer, school, beneficiary, etc.)
+│   │   ├── services/          # Business logic services (federation, SEP-10, sponsorship)
 │   │   ├── middleware/        # Authentication middleware
 │   │   └── utils/             # Logger and utilities
 │   ├── package.json
@@ -163,8 +184,10 @@ edupass/
 │   │   │   ├── SorobanExample.jsx      # Complete integration demo
 │   │   │   ├── ClawbackManager.jsx     # Phase 1: Clawback & authorization UI
 │   │   │   ├── MultiSigManager.jsx     # Phase 1: Multi-sig management UI
-│   │   │   ├── QRCode.jsx              # QR code generation components (NEW!)
-│   │   │   ├── QRScanner.jsx           # QR code scanner component (NEW!)
+│   │   │   ├── FederationManager.jsx   # Phase 2: Federation address management (NEW!)
+│   │   │   ├── SponsorshipManager.jsx  # Phase 2: Transaction sponsorship UI (NEW!)
+│   │   │   ├── QRCode.jsx              # QR code generation components
+│   │   │   ├── QRScanner.jsx           # QR code scanner component
 │   │   │   └── Navigation.jsx
 │   │   ├── hooks/             # Custom React hooks
 │   │   │   └── useSoroban.js  # Soroban interaction hooks
@@ -174,6 +197,9 @@ edupass/
 │   │   ├── services/          # API service layer
 │   │   │   ├── sorobanService.js       # Enhanced Soroban service
 │   │   │   ├── advancedService.js      # Phase 1 features service
+│   │   │   ├── federationService.js    # Phase 2: Federation service (NEW!)
+│   │   │   ├── sep10Service.js         # Phase 2: SEP-10 auth service (NEW!)
+│   │   │   ├── sponsorshipService.js   # Phase 2: Sponsorship service (NEW!)
 │   │   │   └── api.js
 │   │   └── App.jsx
 │   ├── package.json
@@ -186,13 +212,15 @@ edupass/
 │   ├── SOROBAN_INTEGRATION.md # Smart contract architecture
 │   ├── SOROBAN_ENHANCED.md    # Enhanced features guide
 │   ├── SOROBAN_QUICKSTART.md  # Quick start guide
-│   ├── PHASE1_FEATURES.md     # Phase 1: Clawback, authorization, multi-sig (NEW!)
-│   ├── QR_CODE_GUIDE.md       # QR code integration guide (NEW!)
+│   ├── PHASE1_FEATURES.md     # Phase 1: Clawback, authorization, multi-sig
+│   ├── PHASE2_FEATURES.md     # Phase 2: Federation, SEP-10, sponsorship (NEW!)
+│   ├── QR_CODE_GUIDE.md       # QR code integration guide
 │   └── DEPLOYMENT.md          # Production deployment
 ├── scripts/                   # Utility scripts
 │   ├── create-issuer.js       # Stellar account creator
 │   ├── setup-database.sql     # PostgreSQL setup script
-│   ├── phase1-migration.sql   # Phase 1 database migration (NEW!)
+│   ├── phase1-migration.sql   # Phase 1 database migration
+│   ├── phase2-migration.sql   # Phase 2 database migration (NEW!)
 │   ├── setup-database.bat     # Windows database setup
 │   ├── setup-database.sh      # Linux/Mac database setup
 │   ├── install-soroban.bat/.sh # Soroban CLI installation (NEW!)
@@ -597,10 +625,11 @@ Comprehensive guides for developers and users:
 - [**Database Setup Guide**](docs/DATABASE_SETUP.md) - PostgreSQL installation and configuration
 - [**Stellar Integration Guide**](docs/STELLAR_GUIDE.md) - Blockchain integration details and best practices
 - [**Soroban Integration Guide**](docs/SOROBAN_INTEGRATION.md) - Smart contract integration architecture and usage
-- [**Soroban Enhanced Features**](docs/SOROBAN_ENHANCED.md) - **NEW!** Retry logic, caching, hooks, and components
-- [**Soroban Quick Start**](docs/SOROBAN_QUICKSTART.md) - **NEW!** Get started with Soroban in 5 minutes
-- [**Phase 1 Advanced Features**](docs/PHASE1_FEATURES.md) - **NEW!** Clawback, asset authorization, and multi-signature
-- [**QR Code Integration Guide**](docs/QR_CODE_GUIDE.md) - **NEW!** Mobile payments with QR codes
+- [**Soroban Enhanced Features**](docs/SOROBAN_ENHANCED.md) - Retry logic, caching, hooks, and components
+- [**Soroban Quick Start**](docs/SOROBAN_QUICKSTART.md) - Get started with Soroban in 5 minutes
+- [**Phase 1 Advanced Features**](docs/PHASE1_FEATURES.md) - Clawback, asset authorization, and multi-signature
+- [**Phase 2 Federation & Sponsorship**](docs/PHASE2_FEATURES.md) - **NEW!** Federation addresses, SEP-10 auth, transaction sponsorship
+- [**QR Code Integration Guide**](docs/QR_CODE_GUIDE.md) - Mobile payments with QR codes
 - [**Deployment Guide**](docs/DEPLOYMENT.md) - Production deployment on VPS, Docker, Heroku, etc.
 
 ## Testing
@@ -753,21 +782,28 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ⏳ Testnet deployment and testing
 - ⏳ Security audit
 
-**Phase 2: Enhanced Features (Q2 2026)**
+**Phase 2: Federation & Sponsorship (Q2 2026)** ✅
+- ✅ Federation protocol (human-readable Stellar addresses)
+- ✅ SEP-10 authentication (wallet-based login)
+- ✅ Transaction sponsorship (zero-fee for beneficiaries)
+- ✅ Frontend management components
+- ✅ Complete documentation
+
+**Phase 3: Advanced Features (Q2-Q3 2026)**
 - Multi-signature support for large issuances
 - Batch credit issuance for efficiency
 - Advanced analytics dashboard with charts
 - Email/SMS notifications for transactions
 - Export reports (PDF/CSV)
 
-**Phase 3: Scaling (Q3 2026)**
+**Phase 4: Scaling (Q3-Q4 2026)**
 - Mobile application (iOS/Android)
 - KYC/AML integration
 - Multi-language support (Spanish, French, Swahili)
 - API webhooks for third-party integrations
 - Mainnet production deployment
 
-**Phase 4: Ecosystem Growth (Q4 2026)**
+**Phase 5: Ecosystem Growth (Q1 2027)**
 - Partner institution onboarding
 - Cross-institutional credit transfers
 - Scholarship marketplace
@@ -801,17 +837,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Lines of Code**: 15,000+
 - **Documentation Pages**: 10
 - **Supported Roles**: 3
-- **Database Tables**: 14 (9 core + 5 Phase 1)
-- **Database Scripts**: 4 (setup SQL, Phase 1 migration, Windows, Linux/Mac)
+- **Database Tables**: 17 (9 core + 5 Phase 1 + 3 Phase 2)
+- **Database Scripts**: 5 (setup SQL, Phase 1 migration, Phase 2 migration, Windows, Linux/Mac)
 - **Smart Contract Functions**: 7 (Soroban)
-- **Backend Routes**: 7 (auth, issuer, school, beneficiary, transactions, soroban, advanced)
-- **API Endpoints**: 44+ (30 core + 14 Phase 1 advanced features)
+- **Backend Routes**: 10 (auth, issuer, school, beneficiary, transactions, soroban, advanced, federation, sep10, sponsorship)
+- **API Endpoints**: 54+ (30 core + 14 Phase 1 + 10 Phase 2)
 - **React Hooks**: 3 (useSoroban, useBalance, usePendingTransactions)
-- **UI Components**: 16+ (dashboards, Soroban widgets, Phase 1 admin, QR codes)
+- **UI Components**: 18+ (dashboards, Soroban widgets, Phase 1 admin, Phase 2 federation/sponsorship, QR codes)
 - **QR Components**: 7 (ReceiveQR, PaymentQR, TransactionQR, AccountQR, Scanner, Modal, QuickScan)
 - **Build Scripts**: 14 (Soroban install, build, deploy, initialize, test - Windows/Linux)
 - **Utility Functions**: 25+ (QR generation, parsing, validation, formatting)
-- **Latest Update**: QR Code Integration + Soroban Deployment Scripts
+- **Latest Update**: Phase 2 - Federation, SEP-10 Auth, Transaction Sponsorship
 - **Stellar SDK**: @stellar/stellar-sdk v12.3.0
 
 ---
