@@ -9,6 +9,9 @@ const { connectDatabase } = require('./config/database');
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const sep10Routes = require('./routes/sep10');
+const sponsorshipRoutes = require('./routes/sponsorship');
+const federationRoutes = require('./routes/federation');
 const issuerRoutes = require('./routes/issuer');
 const beneficiaryRoutes = require('./routes/beneficiary');
 const schoolRoutes = require('./routes/school');
@@ -61,6 +64,9 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/sep10', sep10Routes);
+app.use('/api/sponsorship', sponsorshipRoutes);
+app.use('/api/federation', federationRoutes);
 app.use('/api/issuer', issuerRoutes);
 app.use('/api/beneficiary', beneficiaryRoutes);
 app.use('/api/school', schoolRoutes);
