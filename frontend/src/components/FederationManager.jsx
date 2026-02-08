@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, User, Edit2, Check } from 'lucide-react';
+import { Search, User, Edit2, Check, AlertCircle, CheckCircle } from 'lucide-react';
 import federationService from '../services/federationService';
 
 function FederationManager() {
@@ -13,10 +13,39 @@ function FederationManager() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editMode, setEditMode] = useState(false);
+  const [validation, setValidation] = useState(null);
+  const [validating, setValidating] = useState(false);
 
   useEffect(() => {
     loadMyFederation();
   }, []);
+
+  // Real-time validation
+  useEffect(() => {
+    if (resolveAddress && resolveAddress.includes('*')) {
+      validateAddressRealtime(resolveAddress);
+    } else {
+      setValidation(null);
+    }
+  }, [resolveAddress]);
+
+  const validateAddressRealtime = async (address) => {
+    if (!address || address.length < 3) {
+      setValidation(null);
+      return;
+    }
+
+    setValidating(true);
+    try {
+      const result = await federationService.validateFederationAddress(address);
+      setValidation(result);
+    } catch (err) {
+      console.error('Validation error:', err);
+      setValidation({ valid: false, error: 'Validation failed' });
+    } finally {
+      setValidating(false);
+    }
+  };
 
   const loadMyFederation = async () => {
     try {
@@ -183,12 +212,52 @@ function FederationManager() {
         <form onSubmit={handleResolveAddress} className="space-y-4">
           <div>
             <label className="label">Federation Address or Public Key</label>
-            <input
-              type="text"
-              required
-              className="input font-mono text-sm"
-              placeholder="name*edupass.local or G..."
-              value={resolveAddress}
+            <div className="relative">
+              <input
+                type="text"
+                required
+                className={`input font-mono text-sm ${
+                  validation?.valid === false ? 'border-red-500' : 
+                  validation?.valid === true ? 'border-green-500' : ''
+                }`}
+                placeholder="name*edupass.local or G..."
+                value={resolveAddress}
+                onChange={(e) => setResolveAddress(e.target.value)}
+              />
+              {validating && (
+                <div className="absolute right-3 top-3">
+                  <div className="animate-spin h-4 w-4 border-2 border-primary-600 border-t-transparent rounded-full"></div>
+                </div>
+              )}
+              {!validating && validation && validation.valid && (
+                <div className="absolute right-3 top-3">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                </div>
+              )}
+              {!validating && validation && !validation.valid && (
+                <div className="absolute right-3 top-3">
+                  <AlertCircle className="h-5 w-5 text-red-500" />
+                </div>
+              )}
+            </div>
+            {validation && !validation.valid && validation.error && (
+              <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                <AlertCircle className="h-4 w-4" />
+                {validation.error}
+              </p>
+            )}
+            {validation && validation.valid && !validation.available && (
+              <p className="mt-1 text-sm text-yellow-600 flex items-center gap-1">
+                <AlertCircle className="h-4 w-4" />
+                This address is already registered
+              </p>
+            )}
+            {validation && validation.valid && validation.available && (
+              <p className="mt-1 text-sm text-green-600 flex items-center gap-1">
+                <CheckCircle className="h-4 w-4" />
+                This address is available!
+              </p>
+            )}
               onChange={(e) => setResolveAddress(e.target.value)}
             />
           </div>
