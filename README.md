@@ -833,8 +833,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Project Stats
 
-- **Files**: 75+
-- **Lines of Code**: 15,000+
+- **Files**: 80+
+- **Lines of Code**: 16,000+
 - **Documentation Pages**: 10
 - **Supported Roles**: 3
 - **Database Tables**: 17 (9 core + 5 Phase 1 + 3 Phase 2)
