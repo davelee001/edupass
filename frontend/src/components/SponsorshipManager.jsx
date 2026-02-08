@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, History, Info, Trash2 } from 'lucide-react';
+import { UserPlus, History, Info, Trash2, AlertTriangle, DollarSign, TrendingDown } from 'lucide-react';
 import sponsorshipService from '../services/sponsorshipService';
 
 function SponsorshipManager() {
@@ -9,6 +9,8 @@ function SponsorshipManager() {
   const [success, setSuccess] = useState('');
   const [history, setHistory] = useState([]);
   const [sponsorshipInfo, setSponsorshipInfo] = useState(null);
+  const [budgetStatus, setBudgetStatus] = useState(null);
+  const [loadingBudget, setLoadingBudget] = useState(false);
 
   // Form state for creating sponsored account
   const [accountForm, setAccountForm] = useState({
@@ -33,7 +35,28 @@ function SponsorshipManager() {
     if (activeTab === 'history') {
       loadHistory();
     }
+    loadBudgetStatus();
   }, [activeTab]);
+
+  // Refresh budget every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadBudgetStatus();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadBudgetStatus = async () => {
+    setLoadingBudget(true);
+    try {
+      const data = await sponsorshipService.getSponsorBalance();
+      setBudgetStatus(data);
+    } catch (err) {
+      console.error('Failed to load budget status:', err);
+    } finally {
+      setLoadingBudget(false);
+    }
+  };
 
   const loadHistory = async () => {
     setLoading(true);
@@ -108,6 +131,98 @@ function SponsorshipManager() {
 
   return (
     <div className="space-y-6">
+      {/* Budget Monitor */}
+      {budgetStatus && (
+        <div className={`rounded-lg shadow-sm p-6 ${
+          budgetStatus.budget.status === 'critical' ? 'bg-red-50 border-2 border-red-500' :
+          budgetStatus.budget.status === 'low' ? 'bg-yellow-50 border-2 border-yellow-500' :
+          'bg-green-50 border border-green-200'
+        }`}>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                {budgetStatus.budget.status === 'critical' && (
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                )}
+                {budgetStatus.budget.status === 'low' && (
+                  <TrendingDown className="h-5 w-5 text-yellow-600" />
+                )}
+                {budgetStatus.budget.status === 'healthy' && (
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                )}
+                <h3 className={`text-lg font-bold ${
+                  budgetStatus.budget.status === 'critical' ? 'text-red-900' :
+                  budgetStatus.budget.status === 'low' ? 'text-yellow-900' :
+                  'text-green-900'
+                }`}>
+                  Sponsorship Budget: {budgetStatus.budget.status.toUpperCase()}
+                </h3>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                <div>
+                  <div className="text-sm text-gray-600">XLM Balance</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {budgetStatus.balance.xlmBalance.toFixed(4)}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Available: {budgetStatus.balance.availableBalance.toFixed(4)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">Total Sponsored</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {budgetStatus.stats.totalSponsored}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Fees: {budgetStatus.stats.totalFeesPaid.toFixed(5)} XLM
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">Operations Left</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    ~{budgetStatus.budget.operationsRemaining}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Avg: {budgetStatus.stats.avgFeePerOperation.toFixed(6)} XLM
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">Est. Days Left</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {budgetStatus.budget.daysRemaining}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    At current rate
+                  </div>
+                </div>
+              </div>
+
+              {budgetStatus.budget.status === 'critical' && (
+                <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded text-sm text-red-900">
+                  <strong>⚠️ Critical:</strong> Balance below {budgetStatus.budget.criticalBalanceThreshold} XLM. 
+                  Please fund your sponsor account immediately to continue operations.
+                </div>
+              )}
+              {budgetStatus.budget.status === 'low' && (
+                <div className="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded text-sm text-yellow-900">
+                  <strong>⚠️ Low Balance:</strong> Balance below {budgetStatus.budget.lowBalanceThreshold} XLM. 
+                  Consider adding more XLM to your sponsor account soon.
+                </div>
+              )}
+            </div>
+            
+            <button
+              onClick={loadBudgetStatus}
+              disabled={loadingBudget}
+              className="ml-4 btn-secondary text-sm"
+            >
+              {loadingBudget ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow-sm p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Sponsored Reserves</h2>
         <p className="text-gray-600 mb-6">
