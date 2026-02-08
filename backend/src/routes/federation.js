@@ -2,6 +2,7 @@ const express = require('express');
 const { query, body, validationResult } = require('express-validator');
 const { authenticateToken } = require('../middleware/auth');
 const federationService = require('../services/federation');
+const federationValidator = require('../utils/federationValidator');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -193,6 +194,49 @@ router.get('/search', [
     logger.error('Error searching federation names:', error);
     res.status(500).json({ 
       error: error.message || 'Search failed' 
+    });
+  }
+});
+
+/**
+ * POST /federation/validate - Validate federation address format
+ * Requires authentication
+ */
+router.post('/validate', [
+  authenticateToken,
+  body('address').notEmpty().withMessage('Address is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        error: 'Invalid request',
+        details: errors.array() 
+      });
+    }
+
+    const { address } = req.body;
+    
+    const isValid = federationValidator.isValidFederationAddress(address);
+    const validationError = federationValidator.getValidationError(address);
+    
+    // Check if address is already taken
+    let isTaken = false;
+    if (isValid) {
+      const existing = await federationService.resolveFederationName(address);
+      isTaken = !!existing;
+    }
+
+    res.json({ 
+      valid: isValid,
+      available: isValid && !isTaken,
+      error: validationError,
+      normalized: isValid ? federationValidator.normalizeFederationAddress(address) : null
+    });
+  } catch (error) {
+    logger.error('Error validating federation address:', error);
+    res.status(500).json({ 
+      error: error.message || 'Validation failed' 
     });
   }
 });
