@@ -123,6 +123,16 @@ export async function formatAccountForDisplay(accountId) {
   }
 }
 
+/**
+ * Validate federation address format and availability
+ * @param {string} address - Federation address to validate
+ * @returns {Promise<object>} - { valid, available, error, normalized }
+ */
+export async function validateFederationAddress(address) {
+  const response = await api.post('/federation/validate', { address });
+  return response.data;
+}
+
 export default {
   resolveFederationName,
   reverseLookup,
@@ -130,5 +140,6 @@ export default {
   getMyFederationName,
   searchFederationNames,
   parseAddress,
-  formatAccountForDisplay
+  formatAccountForDisplay,
+  validateFederationAddress
 };

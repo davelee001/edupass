@@ -80,11 +80,21 @@ export async function revokeSponsorship(accountId) {
   return response.data;
 }
 
+/**
+ * Get sponsor account balance and budget status
+ * @returns {Promise<object>} - Balance info, stats, and budget status
+ */
+export async function getSponsorBalance() {
+  const response = await api.get('/sponsorship/balance');
+  return response.data;
+}
+
 export default {
   createSponsoredAccount,
   establishSponsoredTrustline,
   sponsorTransactionFees,
   getSponsorshipInfo,
   getSponsorshipHistory,
-  revokeSponsorship
+  revokeSponsorship,
+  getSponsorBalance
 };
