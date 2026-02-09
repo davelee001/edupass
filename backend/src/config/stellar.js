@@ -582,6 +582,284 @@ const getAccountSigners = async (publicKey) => {
   }
 };
 
+// ============================================================================
+// PHASE 3: TIME-BOUNDED TRANSACTIONS
+// ============================================================================
+
+/**
+ * Create a time-bounded transaction that expires automatically
+ * @param {string} sourceSecretKey - Source account secret key
+ * @param {string} destinationPublicKey - Destination account public key
+ * @param {string} amount - Amount to send
+ * @param {number} minTime - Minimum time (unix timestamp, 0 = no minimum)
+ * @param {number} maxTime - Maximum time (unix timestamp, 0 = no maximum)
+ * @param {string} memo - Optional memo
+ */
+const createTimeBoundedTransaction = async (
+  sourceSecretKey,
+  destinationPublicKey,
+  amount,
+  minTime = 0,
+  maxTime = 0,
+  memo = null
+) => {
+  try {
+    const sourceKeypair = StellarSdk.Keypair.fromSecret(sourceSecretKey);
+    const sourceAccount = await server.loadAccount(sourceKeypair.publicKey());
+    
+    const transactionBuilder = new StellarSdk.TransactionBuilder(sourceAccount, {
+      fee: await server.fetchBaseFee(),
+      networkPassphrase: isTestnet 
+        ? StellarSdk.Networks.TESTNET 
+        : StellarSdk.Networks.PUBLIC,
+      timebounds: {
+        minTime: minTime.toString(),
+        maxTime: maxTime.toString()
+      }
+    });
+    
+    // Add payment operation
+    transactionBuilder.addOperation(
+      StellarSdk.Operation.payment({
+        destination: destinationPublicKey,
+        asset: edupassAsset,
+        amount: amount.toString()
+      })
+    );
+    
+    // Add memo if provided
+    if (memo) {
+      transactionBuilder.addMemo(StellarSdk.Memo.text(memo));
+    }
+    
+    const transaction = transactionBuilder.build();
+    transaction.sign(sourceKeypair);
+    
+    const result = await server.submitTransaction(transaction);
+    
+    logger.info('Time-bounded transaction created successfully');
+    return {
+      hash: result.hash,
+      minTime,
+      maxTime,
+      expiresAt: maxTime > 0 ? new Date(maxTime * 1000) : null
+    };
+  } catch (error) {
+    logger.error('Error creating time-bounded transaction:', error);
+    throw error;
+  }
+};
+
+/**
+ * Check if a transaction has expired based on its time bounds
+ * @param {number} maxTime - Maximum time from transaction
+ */
+const checkTransactionExpiration = (maxTime) => {
+  if (maxTime === 0) {
+    return { expired: false, message: 'Transaction has no expiration' };
+  }
+  
+  const currentTime = Math.floor(Date.now() / 1000);
+  const expired = currentTime > maxTime;
+  
+  return {
+    expired,
+    message: expired ? 'Transaction has expired' : 'Transaction is still valid',
+    expiresAt: new Date(maxTime * 1000),
+    timeRemaining: expired ? 0 : maxTime - currentTime
+  };
+};
+
+// ============================================================================
+// PHASE 3: MUXED ACCOUNTS
+// ============================================================================
+
+/**
+ * Create a muxed account address
+ * @param {string} publicKey - Base Stellar public key (G...)
+ * @param {string} id - Unique identifier for the muxed account
+ */
+const createMuxedAccount = (publicKey, id) => {
+  try {
+    // Convert id to BigInt (muxed accounts use 64-bit unsigned integers)
+    const muxedId = BigInt(id);
+    
+    const muxedAccount = new StellarSdk.MuxedAccount(
+      new StellarSdk.Account(publicKey, '0'),
+      muxedId.toString()
+    );
+    
+    logger.info(`Muxed account created: ${muxedAccount.accountId()}`);
+    return {
+      muxedAddress: muxedAccount.accountId(), // M... address
+      baseAddress: publicKey, // G... address
+      id: id
+    };
+  } catch (error) {
+    logger.error('Error creating muxed account:', error);
+    throw error;
+  }
+};
+
+/**
+ * Parse a muxed account address to get base account and ID
+ * @param {string} muxedAddress - Muxed account address (M...)
+ */
+const parseMuxedAccount = (muxedAddress) => {
+  try {
+    if (!muxedAddress.startsWith('M')) {
+      throw new Error('Not a muxed account address');
+    }
+    
+    const muxedAccount = StellarSdk.MuxedAccount.fromAddress(muxedAddress, '0');
+    
+    return {
+      muxedAddress,
+      baseAddress: muxedAccount.baseAccount().accountId(),
+      id: muxedAccount.id()
+    };
+  } catch (error) {
+    logger.error('Error parsing muxed account:', error);
+    throw error;
+  }
+};
+
+/**
+ * Send credits to a muxed account
+ * @param {string} sourceSecretKey - Source account secret key
+ * @param {string} muxedDestination - Destination muxed account (M...)
+ * @param {string} amount - Amount to send
+ */
+const sendToMuxedAccount = async (sourceSecretKey, muxedDestination, amount) => {
+  try {
+    const sourceKeypair = StellarSdk.Keypair.fromSecret(sourceSecretKey);
+    const sourceAccount = await server.loadAccount(sourceKeypair.publicKey());
+    
+    const transaction = new StellarSdk.TransactionBuilder(sourceAccount, {
+      fee: await server.fetchBaseFee(),
+      networkPassphrase: isTestnet 
+        ? StellarSdk.Networks.TESTNET 
+        : StellarSdk.Networks.PUBLIC
+    })
+      .addOperation(
+        StellarSdk.Operation.payment({
+          destination: muxedDestination,
+          asset: edupassAsset,
+          amount: amount.toString()
+        })
+      )
+      .setTimeout(30)
+      .build();
+    
+    transaction.sign(sourceKeypair);
+    const result = await server.submitTransaction(transaction);
+    
+    logger.info('Payment to muxed account successful');
+    return result;
+  } catch (error) {
+    logger.error('Error sending to muxed account:', error);
+    throw error;
+  }
+};
+
+// ============================================================================
+// PHASE 3: SEP-24 ANCHOR INTEGRATION
+// ============================================================================
+
+/**
+ * Initiate a SEP-24 deposit (fiat to crypto)
+ * @param {string} assetCode - Asset to deposit
+ * @param {string} accountPublicKey - Recipient Stellar account
+ * @param {number} amount - Amount to deposit
+ * @param {string} anchorDomain - Anchor domain (e.g., 'testanchor.stellar.org')
+ */
+const initiateSEP24Deposit = async (assetCode, accountPublicKey, amount, anchorDomain) => {
+  try {
+    // In production, this would:
+    // 1. Get anchor's TOML file
+    // 2. Authenticate with SEP-10
+    // 3. Call /deposit endpoint
+    // 4. Return interactive URL for user
+    
+    // For demonstration, we'll create a mock response
+    const mockTransactionId = `deposit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    logger.info(`SEP-24 deposit initiated: ${mockTransactionId}`);
+    
+    return {
+      id: mockTransactionId,
+      type: 'deposit',
+      status: 'pending_user_transfer_start',
+      assetCode,
+      amount,
+      accountPublicKey,
+      anchorDomain,
+      // This URL would normally come from the anchor
+      interactiveUrl: `https://${anchorDomain}/deposit?transaction_id=${mockTransactionId}`,
+      message: 'Please complete the deposit at the interactive URL'
+    };
+  } catch (error) {
+    logger.error('Error initiating SEP-24 deposit:', error);
+    throw error;
+  }
+};
+
+/**
+ * Initiate a SEP-24 withdrawal (crypto to fiat)
+ * @param {string} assetCode - Asset to withdraw
+ * @param {string} accountPublicKey - Source Stellar account
+ * @param {number} amount - Amount to withdraw
+ * @param {string} anchorDomain - Anchor domain
+ */
+const initiateSEP24Withdrawal = async (assetCode, accountPublicKey, amount, anchorDomain) => {
+  try {
+    const mockTransactionId = `withdrawal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    logger.info(`SEP-24 withdrawal initiated: ${mockTransactionId}`);
+    
+    return {
+      id: mockTransactionId,
+      type: 'withdrawal',
+      status: 'pending_user_transfer_start',
+      assetCode,
+      amount,
+      accountPublicKey,
+      anchorDomain,
+      interactiveUrl: `https://${anchorDomain}/withdraw?transaction_id=${mockTransactionId}`,
+      message: 'Please complete the withdrawal at the interactive URL'
+    };
+  } catch (error) {
+    logger.error('Error initiating SEP-24 withdrawal:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get SEP-24 transaction status
+ * @param {string} transactionId - Transaction ID from initiate call
+ * @param {string} anchorDomain - Anchor domain
+ */
+const getSEP24TransactionStatus = async (transactionId, anchorDomain) => {
+  try {
+    // In production, this would query the anchor's /transaction endpoint
+    // For demonstration, return mock status
+    
+    const status = {
+      id: transactionId,
+      status: 'completed',
+      statusEta: null,
+      moreInfoUrl: `https://${anchorDomain}/transaction/${transactionId}`,
+      message: 'Transaction completed successfully'
+    };
+    
+    logger.info(`SEP-24 transaction status retrieved: ${transactionId}`);
+    return status;
+  } catch (error) {
+    logger.error('Error getting SEP-24 transaction status:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   server,
   edupassAsset,
@@ -609,5 +887,16 @@ module.exports = {
   createMultiSigTransaction,
   signTransaction,
   submitMultiSigTransaction,
-  getAccountSigners
+  getAccountSigners,
+  // Phase 3: Time-bounded transactions
+  createTimeBoundedTransaction,
+  checkTransactionExpiration,
+  // Phase 3: Muxed accounts
+  createMuxedAccount,
+  parseMuxedAccount,
+  sendToMuxedAccount,
+  // Phase 3: SEP-24 integration
+  initiateSEP24Deposit,
+  initiateSEP24Withdrawal,
+  getSEP24TransactionStatus
 };
