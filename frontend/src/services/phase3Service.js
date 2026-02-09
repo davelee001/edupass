@@ -186,6 +186,129 @@ export const getSEP24Transactions = async () => {
   }
 };
 
+// ============================================================================
+// PHASE 3: PATH PAYMENTS
+// ============================================================================
+
+/**
+ * Send path payment with automatic asset conversion
+ * @param {string} destinationPublicKey - Destination account
+ * @param {number} destAmount - Amount destination should receive
+ * @param {number} sendMax - Maximum amount willing to send
+ * @param {string} destAssetCode - Destination asset code (optional)
+ * @param {string} sendAssetCode - Source asset code (optional)
+ * @param {array} path - Path of assets for conversion (optional)
+ */
+export const sendPathPayment = async (
+  destinationPublicKey,
+  destAmount,
+  sendMax,
+  destAssetCode = 'EDUPASS',
+  sendAssetCode = null,
+  path = []
+) => {
+  try {
+    const response = await api.post('/phase3/path-payment', {
+      destinationPublicKey,
+      destAmount,
+      sendMax,
+      destAssetCode,
+      sendAssetCode,
+      path
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Find payment paths between assets
+ * @param {string} destinationPublicKey - Destination account
+ * @param {string} destAssetCode - Destination asset code
+ * @param {number} destAmount - Amount to receive
+ */
+export const findPaymentPaths = async (
+  destinationPublicKey,
+  destAssetCode,
+  destAmount
+) => {
+  try {
+    const response = await api.post('/phase3/find-paths', {
+      destinationPublicKey,
+      destAssetCode,
+      destAmount
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// ============================================================================
+// PHASE 3: MANAGE DATA
+// ============================================================================
+
+/**
+ * Store or delete data entry on account
+ * @param {string} name - Data entry name (max 64 bytes)
+ * @param {string} value - Data entry value (null to delete)
+ */
+export const manageAccountData = async (name, value = null) => {
+  try {
+    const response = await api.post('/phase3/manage-data', {
+      name,
+      value
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Get all data entries for current account
+ */
+export const getAccountData = async () => {
+  try {
+    const response = await api.get('/phase3/account-data');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// ============================================================================
+// PHASE 3: ACCOUNT MERGE
+// ============================================================================
+
+/**
+ * Merge current account into another account
+ * @param {string} destinationPublicKey - Account to merge into
+ */
+export const mergeAccount = async (destinationPublicKey) => {
+  try {
+    const response = await api.post('/phase3/merge-account', {
+      destinationPublicKey
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Check if current account can be merged
+ */
+export const canMergeAccount = async () => {
+  try {
+    const response = await api.get('/phase3/can-merge');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 export default {
   // Time-bounded transactions
   createTimeBoundedTransaction,
@@ -201,5 +324,17 @@ export default {
   initiateSEP24Deposit,
   initiateSEP24Withdrawal,
   getSEP24TransactionStatus,
-  getSEP24Transactions
+  getSEP24Transactions,
+  
+  // Path payments
+  sendPathPayment,
+  findPaymentPaths,
+  
+  // Manage data
+  manageAccountData,
+  getAccountData,
+  
+  // Account merge
+  mergeAccount,
+  canMergeAccount
 };
