@@ -18,6 +18,7 @@ const schoolRoutes = require('./routes/school');
 const transactionRoutes = require('./routes/transactions');
 const sorobanRoutes = require('./routes/soroban');
 const advancedRoutes = require('./routes/advanced');
+const phase3Routes = require('./routes/phase3');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -73,6 +74,7 @@ app.use('/api/school', schoolRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/soroban', sorobanRoutes);
 app.use('/api/advanced', advancedRoutes);
+app.use('/api/phase3', phase3Routes);
 
 // 404 handler
 app.use((req, res) => {
