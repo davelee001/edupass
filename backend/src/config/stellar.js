@@ -860,6 +860,250 @@ const getSEP24TransactionStatus = async (transactionId, anchorDomain) => {
   }
 };
 
+// ============================================================================
+// PHASE 3: PATH PAYMENTS
+// ============================================================================
+
+/**
+ * Send payment that automatically converts through path
+ * @param {string} sourceSecretKey - Source account secret key
+ * @param {string} destinationPublicKey - Destination account
+ * @param {string} destAmount - Amount destination should receive
+ * @param {object} destAsset - Destination asset (or native)
+ * @param {string} sendMax - Maximum amount willing to send
+ * @param {object} sendAsset - Asset to send (or native)
+ * @param {array} path - Optional path of assets to convert through
+ */
+const sendPathPayment = async (
+  sourceSecretKey,
+  destinationPublicKey,
+  destAmount,
+  destAsset = edupassAsset,
+  sendMax,
+  sendAsset = StellarSdk.Asset.native(),
+  path = []
+) => {
+  try {
+    const sourceKeypair = StellarSdk.Keypair.fromSecret(sourceSecretKey);
+    const sourceAccount = await server.loadAccount(sourceKeypair.publicKey());
+    
+    const transaction = new StellarSdk.TransactionBuilder(sourceAccount, {
+      fee: await server.fetchBaseFee(),
+      networkPassphrase: isTestnet 
+        ? StellarSdk.Networks.TESTNET 
+        : StellarSdk.Networks.PUBLIC
+    })
+      .addOperation(
+        StellarSdk.Operation.pathPaymentStrictReceive({
+          sendAsset: sendAsset,
+          sendMax: sendMax.toString(),
+          destination: destinationPublicKey,
+          destAsset: destAsset,
+          destAmount: destAmount.toString(),
+          path: path
+        })
+      )
+      .setTimeout(30)
+      .build();
+    
+    transaction.sign(sourceKeypair);
+    const result = await server.submitTransaction(transaction);
+    
+    logger.info('Path payment successful');
+    return {
+      hash: result.hash,
+      sourceAsset: sendAsset === StellarSdk.Asset.native() ? 'XLM' : sendAsset.code,
+      destAsset: destAsset.code,
+      destAmount
+    };
+  } catch (error) {
+    logger.error('Error sending path payment:', error);
+    throw error;
+  }
+};
+
+/**
+ * Find payment paths between assets
+ * @param {string} sourcePublicKey - Source account
+ * @param {string} destinationPublicKey - Destination account
+ * @param {object} destAsset - Destination asset
+ * @param {string} destAmount - Amount to receive
+ */
+const findPaymentPaths = async (
+  sourcePublicKey,
+  destinationPublicKey,
+  destAsset,
+  destAmount
+) => {
+  try {
+    const paths = await server
+      .strictReceivePaths(sourcePublicKey, destAsset, destAmount)
+      .call();
+    
+    logger.info(`Found ${paths.records.length} payment paths`);
+    return paths.records.map(path => ({
+      sourceAmount: path.source_amount,
+      sourceAsset: path.source_asset_type === 'native' ? 'XLM' : path.source_asset_code,
+      path: path.path,
+      destinationAmount: path.destination_amount
+    }));
+  } catch (error) {
+    logger.error('Error finding payment paths:', error);
+    throw error;
+  }
+};
+
+// ============================================================================
+// PHASE 3: MANAGE DATA
+// ============================================================================
+
+/**
+ * Store data entry on account
+ * @param {string} secretKey - Account secret key
+ * @param {string} name - Data entry name (max 64 bytes)
+ * @param {string} value - Data entry value (max 64 bytes, null to delete)
+ */
+const manageData = async (secretKey, name, value) => {
+  try {
+    const keypair = StellarSdk.Keypair.fromSecret(secretKey);
+    const account = await server.loadAccount(keypair.publicKey());
+    
+    const transaction = new StellarSdk.TransactionBuilder(account, {
+      fee: await server.fetchBaseFee(),
+      networkPassphrase: isTestnet 
+        ? StellarSdk.Networks.TESTNET 
+        : StellarSdk.Networks.PUBLIC
+    })
+      .addOperation(
+        StellarSdk.Operation.manageData({
+          name: name,
+          value: value
+        })
+      )
+      .setTimeout(30)
+      .build();
+    
+    transaction.sign(keypair);
+    const result = await server.submitTransaction(transaction);
+    
+    logger.info(`Data entry ${value ? 'set' : 'deleted'}: ${name}`);
+    return {
+      hash: result.hash,
+      name,
+      action: value ? 'set' : 'deleted'
+    };
+  } catch (error) {
+    logger.error('Error managing data:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all data entries for an account
+ * @param {string} publicKey - Account public key
+ */
+const getAccountData = async (publicKey) => {
+  try {
+    const account = await server.loadAccount(publicKey);
+    
+    const dataEntries = {};
+    for (const [key, value] of Object.entries(account.data_attr || {})) {
+      dataEntries[key] = Buffer.from(value, 'base64').toString('utf8');
+    }
+    
+    logger.info(`Retrieved ${Object.keys(dataEntries).length} data entries`);
+    return dataEntries;
+  } catch (error) {
+    logger.error('Error getting account data:', error);
+    throw error;
+  }
+};
+
+// ============================================================================
+// PHASE 3: ACCOUNT MERGE
+// ============================================================================
+
+/**
+ * Merge account into another account
+ * @param {string} sourceSecretKey - Account to merge (will be deleted)
+ * @param {string} destinationPublicKey - Account to receive funds
+ */
+const mergeAccount = async (sourceSecretKey, destinationPublicKey) => {
+  try {
+    const sourceKeypair = StellarSdk.Keypair.fromSecret(sourceSecretKey);
+    const sourceAccount = await server.loadAccount(sourceKeypair.publicKey());
+    
+    // Get source account balance before merge
+    const xlmBalance = sourceAccount.balances.find(b => b.asset_type === 'native');
+    
+    const transaction = new StellarSdk.TransactionBuilder(sourceAccount, {
+      fee: await server.fetchBaseFee(),
+      networkPassphrase: isTestnet 
+        ? StellarSdk.Networks.TESTNET 
+        : StellarSdk.Networks.PUBLIC
+    })
+      .addOperation(
+        StellarSdk.Operation.accountMerge({
+          destination: destinationPublicKey
+        })
+      )
+      .setTimeout(30)
+      .build();
+    
+    transaction.sign(sourceKeypair);
+    const result = await server.submitTransaction(transaction);
+    
+    logger.info(`Account merged: ${sourceKeypair.publicKey()} -> ${destinationPublicKey}`);
+    return {
+      hash: result.hash,
+      sourceAccount: sourceKeypair.publicKey(),
+      destinationAccount: destinationPublicKey,
+      balanceTransferred: xlmBalance ? xlmBalance.balance : '0'
+    };
+  } catch (error) {
+    logger.error('Error merging account:', error);
+    throw error;
+  }
+};
+
+/**
+ * Check if account can be merged
+ * @param {string} publicKey - Account to check
+ */
+const canMergeAccount = async (publicKey) => {
+  try {
+    const account = await server.loadAccount(publicKey);
+    
+    // Account cannot be merged if it:
+    // 1. Has non-native assets
+    // 2. Has signers other than the master key
+    // 3. Has subentries (trustlines, offers, data entries)
+    
+    const hasNonNativeAssets = account.balances.some(
+      b => b.asset_type !== 'native'
+    );
+    
+    const hasAdditionalSigners = account.signers.length > 1;
+    
+    const hasSubentries = account.subentry_count > 0;
+    
+    const canMerge = !hasNonNativeAssets && !hasAdditionalSigners && !hasSubentries;
+    
+    return {
+      canMerge,
+      reasons: {
+        hasNonNativeAssets,
+        hasAdditionalSigners,
+        hasSubentries
+      },
+      xlmBalance: account.balances.find(b => b.asset_type === 'native')?.balance || '0'
+    };
+  } catch (error) {
+    logger.error('Error checking merge eligibility:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   server,
   edupassAsset,
@@ -898,5 +1142,14 @@ module.exports = {
   // Phase 3: SEP-24 integration
   initiateSEP24Deposit,
   initiateSEP24Withdrawal,
-  getSEP24TransactionStatus
+  getSEP24TransactionStatus,
+  // Phase 3: Path payments
+  sendPathPayment,
+  findPaymentPaths,
+  // Phase 3: Manage data
+  manageData,
+  getAccountData,
+  // Phase 3: Account merge
+  mergeAccount,
+  canMergeAccount
 };
