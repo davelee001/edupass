@@ -1,19 +1,25 @@
-# Phase 3: Time-Bounded Transactions, Muxed Accounts & SEP-24
+# Phase 3: Advanced Stellar Features
 
-This document covers the Phase 3 features: **Time-Bounded Transactions**, **Muxed Accounts**, and **SEP-24 Anchor Integration** for the EduPass education credits system.
+This document covers the Phase 3 features: **Time-Bounded Transactions**, **Muxed Accounts**, **SEP-24 Anchor Integration**, **Path Payments**, **On-Chain Data Management**, and **Account Merging** for the EduPass education credits system.
 
 ## 🎯 Overview
 
-Phase 3 adds three advanced features for enhanced transaction control and fiat integration:
+Phase 3 adds six advanced features for enhanced transaction control, asset conversion, and account management:
 
 1. **Time-Bounded Transactions** - Automatic expiration for time-sensitive payments
 2. **Muxed Accounts** - Better organization with multiplexed addresses
 3. **SEP-24 Anchors** - Fiat currency integration via regulated anchors
+4. **Path Payments** - Automatic asset conversion through the network
+5. **On-Chain Data Management** - Store metadata directly on the blockchain
+6. **Account Merge** - Consolidate multiple accounts into one
 
 These features enable:
 - ✅ Time-sensitive scholarship distributions with auto-expiration
 - ✅ Organized payment tracking with categorized addresses
 - ✅ Seamless fiat-to-crypto conversion for accessibility
+- ✅ Automatic asset conversion for cross-currency payments
+- ✅ Permanent on-chain storage of student and institutional metadata
+- ✅ Account consolidation and cleanup operations
 - ✅ Enhanced security with transaction time windows
 - ✅ Lower barrier to entry with fiat on/off ramps
 
@@ -24,9 +30,12 @@ These features enable:
 1. [Time-Bounded Transactions](#time-bounded-transactions)
 2. [Muxed Accounts](#muxed-accounts)
 3. [SEP-24 Anchor Integration](#sep-24-anchor-integration)
-4. [API Reference](#api-reference)
-5. [Database Schema](#database-schema)
-6. [Usage Examples](#usage-examples)
+4. [Path Payments](#path-payments)
+5. [On-Chain Data Management](#on-chain-data-management)
+6. [Account Merge](#account-merge)
+7. [API Reference](#api-reference)
+8. [Database Schema](#database-schema)
+9. [Usage Examples](#usage-examples)
 7. [Setup Guide](#setup-guide)
 
 ---
@@ -529,7 +538,247 @@ CREATE TABLE sep24_transactions (
 
 ---
 
-## 📚 API Reference
+## � Path Payments
+
+### What are Path Payments?
+
+Path payments enable **automatic asset conversion** through the Stellar network. You can send one asset type and the recipient receives a different asset type, with conversion happening automatically through the best available market paths.
+
+**Benefits:**
+- **Automatic Conversion**: Network handles currency exchange
+- **Best Rates**: Automatically finds optimal conversion path
+- **Cross-Currency Payments**: Send XLM, recipient gets EDUPASS
+- **Transparency**: Know maximum send amount upfront
+- **Multi-Hop**: Can convert through multiple intermediary assets
+
+### How It Works
+
+```
+Sender Account (XLM)
+    ↓
+Path Payment Operation
+    ↓ (automatic conversion via DEX)
+Recipient Account (EDUPASS)
+```
+
+**Process:**
+1. Specify destination account and amount they should receive
+2. Specify maximum amount you're willing to send
+3. Network finds best conversion path through order books
+4. Transaction executes if path exists within send limit
+5. Recipient gets exact amount in their desired asset
+
+### Use Cases for EduPass
+
+1. **Cross-Currency Scholarships**: School sends XLM, student receives EDUPASS credits
+2. **Fiat Integration**: Convert from anchored USD to EDUPASS seamlessly
+3. **Flexible Donations**: Donors send any asset, institution receives EDUPASS
+4. **Payment Flexibility**: Students pay fees in any supported asset
+
+### Frontend Component
+
+The `PathPaymentManager` component provides two main functions:
+
+**Send Payment Tab:**
+- Select destination account
+- Specify amount to receive and asset type
+- Set maximum amount willing to send
+- Choose source asset (XLM or custom)
+- Execute path payment with automatic conversion
+
+**Find Paths Tab:**
+- Search for available payment paths
+- View all possible conversion routes
+- See estimated costs for each path
+- Compare exchange rates
+
+### Backend Implementation
+
+```javascript
+// Send path payment
+POST /api/phase3/path-payment
+{
+  "destinationPublicKey": "GXXX...",
+  "destAmount": 100,
+  "destAssetCode": "EDUPASS",
+  "sendMax": 110,
+  "sendAssetCode": null  // null = XLM
+}
+
+// Find available paths
+POST /api/phase3/find-paths
+{
+  "destinationPublicKey": "GXXX...",
+  "destAssetCode": "EDUPASS",
+  "destAmount": 100
+}
+```
+
+---
+
+## 📝 On-Chain Data Management
+
+### What is On-Chain Data?
+
+Stellar accounts can store **up to 64 bytes of metadata per entry** directly on the blockchain. This data is publicly readable, permanent, and associated with the account.
+
+**Benefits:**
+- **Permanent Storage**: Data lives on blockchain forever
+- **Publicly Verifiable**: Anyone can read and verify
+- **Immutable History**: Changes are tracked on ledger
+- **No External Database**: Decentralized storage
+- **Low Cost**: Small fee per entry
+
+### How It Works
+
+```
+Account Data Entries
+├── Key: "student_id" → Value: "STU-2024-001"
+├── Key: "institution" → Value: "Harvard"
+├── Key: "graduation_year" → Value: "2028"
+└── Key: "program" → Value: "CS-BS"
+```
+
+**Data Entry Operations:**
+- **Add**: Set new key-value pair
+- **Update**: Change value for existing key
+- **Delete**: Set value to null to remove entry
+
+### Use Cases for EduPass
+
+1. **Student Identification**: Store student ID numbers on-chain
+2. **Institutional Metadata**: University name, department codes
+3. **Credential Verification**: Link to off-chain credential hashes
+4. **Contact Info**: Store email hashes for recovery
+5. **Program Tracking**: Degree program, expected graduation year
+
+### Data Entry Limits
+
+- **Key**: Max 64 characters (string)
+- **Value**: Max 64 bytes (base64 encoded)
+- **Count**: Unlimited entries (each increases minimum balance)
+- **Fee**: 0.5 XLM base reserve per entry
+
+### Frontend Component
+
+The `DataManager` component provides:
+
+**Add/Update Tab:**
+- Enter key name (e.g., "student_id")
+- Enter value (e.g., "STU-2024-001")
+- Leave value empty to delete entry
+- Submit to blockchain
+
+**View Data Tab:**
+- Enter any account public key
+- Load all data entries for that account
+- View key-value pairs
+- Delete your own entries
+
+### Backend Implementation
+
+```javascript
+// Add or update data
+POST /api/phase3/manage-data
+{
+  "key": "student_id",
+  "value": "STU-2024-001"  // null to delete
+}
+
+// Get account data entries
+GET /api/phase3/account-data?publicKey=GXXX...
+```
+
+---
+
+## 🔀 Account Merge
+
+### What is Account Merge?
+
+Account merging is a **permanent, irreversible operation** that transfers all XLM from one account to another and deletes the source account.
+
+**⚠️ WARNING: This operation CANNOT be undone!**
+
+**What Happens:**
+- All XLM balance transferred to destination
+- Source account permanently deleted
+- All trustlines removed
+- All data entries removed
+- All offers cancelled
+- Base reserve returned
+
+### Requirements for Merging
+
+An account can only be merged if:
+- ✅ No active trustlines
+- ✅ No open offers on the DEX
+- ✅ Sufficient XLM balance (above minimum)
+- ✅ No outstanding clawback flags
+- ✅ Destination account exists
+
+### How It Works
+
+```
+Source Account
+├── Balance: 100 XLM
+├── Trustlines: 0 (must be removed first)
+├── Offers: 0 (must be cancelled first)
+└── Data: 0 (will be deleted)
+    ↓ MERGE OPERATION
+Destination Account
+└── Balance: +100 XLM
+
+Source Account → DELETED PERMANENTLY
+```
+
+### Use Cases for EduPass
+
+1. **Account Consolidation**: Merge test accounts into main account
+2. **Cleanup**: Remove unused student accounts after graduation
+3. **Fund Recovery**: Retrieve XLM from old accounts
+4. **Simplification**: Combine multiple institutional accounts
+
+### Frontend Component
+
+The `AccountMergeManager` component provides:
+
+**Check Eligibility Tab:**
+- Enter account public key to check
+- View balance, subentries, signers
+- See if account can be merged
+- Get detailed eligibility report
+
+**Merge Account Tab:**
+- ⚠️ Multiple warning dialogs
+- Enter destination public key
+- Confirm irreversible action
+- Execute merge operation
+- View final transaction details
+
+### Backend Implementation
+
+```javascript
+// Check if account can be merged
+GET /api/phase3/can-merge?publicKey=GXXX...
+
+// Merge account (IRREVERSIBLE!)
+POST /api/phase3/merge-account
+{
+  "destinationPublicKey": "GXXX..."
+}
+```
+
+### Security Considerations
+
+- ⚠️ **Irreversible**: No undo, backup data first
+- ⚠️ **Permanent Deletion**: Account gone forever
+- ⚠️ **Preparation Required**: Remove trustlines and offers first
+- ✅ **Verification**: Check eligibility before merging
+- ✅ **Confirmation**: Multiple confirmation dialogs
+
+---
+
+## �📚 API Reference
 
 ### Time-Bounded Transactions
 
@@ -555,6 +804,27 @@ CREATE TABLE sep24_transactions (
 | `/api/phase3/sep24/withdrawal` | POST | ✅ | Initiate fiat withdrawal |
 | `/api/phase3/sep24/transaction/:id` | GET | ✅ | Get transaction status |
 | `/api/phase3/sep24/transactions` | GET | ✅ | Get all transactions |
+
+### Path Payments
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/phase3/path-payment` | POST | ✅ | Send payment with automatic conversion |
+| `/api/phase3/find-paths` | POST | ✅ | Find available payment paths |
+
+### On-Chain Data Management
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/phase3/manage-data` | POST | ✅ | Add/update/delete account data |
+| `/api/phase3/account-data` | GET | ❌ | Get all data entries for an account |
+
+### Account Merge
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/phase3/can-merge` | GET | ❌ | Check if account can be merged |
+| `/api/phase3/merge-account` | POST | ✅ | Merge account (IRREVERSIBLE!) |
 
 ---
 
@@ -671,6 +941,27 @@ console.log('All fiat conversions:', transactions);
 - ⚠️ Never store user bank details
 - ✅ Let anchors handle KYC/AML compliance
 
+### Path Payments
+- ⚠️ Always set realistic sendMax to avoid overpaying
+- ⚠️ Check available paths before executing payment
+- ⚠️ Account for slippage in conversion rates
+- ✅ Monitor order book depth for large payments
+
+### On-Chain Data
+- ⚠️ Never store sensitive information (passwords, private keys)
+- ⚠️ Data is publicly readable by anyone
+- ⚠️ Consider GDPR/privacy before storing personal data
+- ✅ Use hashes instead of raw data when possible
+- ✅ Each entry increases minimum balance requirement
+
+### Account Merge
+- ⚠️ IRREVERSIBLE - cannot undo after execution
+- ⚠️ Must remove all trustlines before merging
+- ⚠️ Must cancel all DEX offers before merging
+- ⚠️ Backup any important data entries first
+- ✅ Always check eligibility before attempting merge
+- ✅ Double-check destination address
+
 ---
 
 ## 🚀 Next Steps
@@ -679,12 +970,17 @@ console.log('All fiat conversions:', transactions);
 - ✅ Time-bounded transactions for expiring payments
 - ✅ Muxed accounts for organized payment tracking
 - ✅ SEP-24 integration for fiat on/off ramps
+- ✅ Path payments for automatic currency conversion
+- ✅ On-chain data management for metadata storage
+- ✅ Account merge for consolidation and cleanup
 
 **Potential Future Enhancements:**
-- Path payments for automatic currency conversion
 - Liquidity pools for EDUPASS trading
+- Automated market makers (AMM) for better liquidity
 - Atomic swaps with other educational institutions
 - Cross-border payments with anchors in multiple countries
+- Claimable balances for conditional payments
+- Regulated assets compliance integration
 
 ---
 
