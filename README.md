@@ -129,8 +129,33 @@ EduPass eliminates these inefficiencies by leveraging Stellar blockchain and Sor
   - FederationManager: register/lookup federation addresses
   - SponsorshipManager: sponsor accounts, track sponsored transactions
 
+### ⏰ Phase 3: Time-Bounded, Muxed Accounts & Fiat Integration (NEW!)
+- **Time-Bounded Transactions** - Automatic expiration for time-sensitive payments
+  - Set minTime and maxTime for transaction validity windows
+  - Perfect for flash scholarships and limited-time offers
+  - Automatic expiration without manual intervention
+  - Future-dated transactions with scheduled start times
+  - Enhanced security against replay attacks
+- **Muxed Accounts** - Better organization with multiplexed addresses (M addresses)
+  - Multiple virtual addresses mapping to one Stellar account
+  - Categorize payments: tuition, cafeteria, supplies, scholarships
+  - Track payment sources and purposes automatically
+  - Simplified accounting and reporting
+  - Privacy-preserving payment organization
+- **SEP-24 Anchor Integration** - Fiat on/off ramps via regulated anchors
+  - Deposit: Convert fiat (USD, EUR) → EDUPASS credits
+  - Withdrawal: Convert EDUPASS credits → fiat currency
+  - Interactive KYC/AML compliance flow
+  - Bank account integration for seamless transfers
+  - Transaction status tracking and history
+  - Lower barrier to entry for non-crypto users
+- **Phase 3 UI Components** - Advanced management interfaces
+  - TimeBoundedTransactionManager: create expiring transactions
+  - MuxedAccountManager: create/manage muxed addresses
+  - SEP24Manager: initiate deposits/withdrawals, track status
+
 ### Developer-Friendly
-- **RESTful API** - Complete backend API with 54+ endpoints (30 core + 14 Phase 1 + 10 Phase 2)
+- **RESTful API** - Complete backend API with 70+ endpoints (30 core + 14 Phase 1 + 10 Phase 2 + 16 Phase 3)
 - **React components** - Pre-built dashboard UI components with Soroban widgets
 - **React Hooks** - Custom hooks for smart contract interactions
 - **Comprehensive docs** - 10 detailed documentation files
@@ -628,7 +653,8 @@ Comprehensive guides for developers and users:
 - [**Soroban Enhanced Features**](docs/SOROBAN_ENHANCED.md) - Retry logic, caching, hooks, and components
 - [**Soroban Quick Start**](docs/SOROBAN_QUICKSTART.md) - Get started with Soroban in 5 minutes
 - [**Phase 1 Advanced Features**](docs/PHASE1_FEATURES.md) - Clawback, asset authorization, and multi-signature
-- [**Phase 2 Federation & Sponsorship**](docs/PHASE2_FEATURES.md) - **NEW!** Federation addresses, SEP-10 auth, transaction sponsorship
+- [**Phase 2 Federation & Sponsorship**](docs/PHASE2_FEATURES.md) - Federation addresses, SEP-10 auth, transaction sponsorship
+- [**Phase 3 Time-Bounded & Fiat**](docs/PHASE3_FEATURES.md) - **NEW!** Time-bounded transactions, muxed accounts, SEP-24 anchors
 - [**QR Code Integration Guide**](docs/QR_CODE_GUIDE.md) - Mobile payments with QR codes
 - [**Deployment Guide**](docs/DEPLOYMENT.md) - Production deployment on VPS, Docker, Heroku, etc.
 
