@@ -69,7 +69,7 @@ EduPass eliminates these inefficiencies by leveraging Stellar blockchain and Sor
 - **Built-in reporting** - Transaction analytics and statistics
 - **Dual storage** - Blockchain for immutability + PostgreSQL for queries
 
-### 🚀 Enhanced Soroban Integration
+### Enhanced Soroban Integration
 - **Transaction Retry Logic** - Automatic retry on transient failures (up to 3 attempts)
 - **Transaction Confirmation** - Wait for ledger confirmation before success
 - **Pre-Submit Simulation** - Validate transactions before on-chain execution
@@ -81,7 +81,7 @@ EduPass eliminates these inefficiencies by leveraging Stellar blockchain and Sor
 - **Transaction Tracking** - Track in-progress operations with visual indicators
 - **Enhanced Error Handling** - User-friendly messages with recovery suggestions
 
-### 📱 QR Code Integration (NEW!)
+### QR Code Integration
 - **Payment Requests** - Schools generate QR codes for specific payment amounts
 - **Receive Credits** - Students display QR codes for receiving credits
 - **Transaction Receipts** - QR codes linking to blockchain explorer for verification
@@ -91,7 +91,7 @@ EduPass eliminates these inefficiencies by leveraging Stellar blockchain and Sor
 - **Download & Share** - Save QR codes as images for offline sharing
 - **SEP-0007 Compatible** - Standard Stellar payment URI format
 
-### 🔐 Phase 1: Advanced Stellar Features (NEW!)
+### Phase 1: Advanced Stellar Features
 - **Clawback** - Revoke credits from accounts (fraud prevention, expired credits)
   - Immediate credit recovery from fraudulent or compromised accounts
   - Audit trail for all clawback operations
@@ -109,7 +109,7 @@ EduPass eliminates these inefficiencies by leveraging Stellar blockchain and Sor
   - ClawbackManager: freeze accounts, clawback credits, view history
   - MultiSigManager: manage signers, create/approve multi-sig transactions
 
-### 🌐 Phase 2: Federation & Sponsorship (NEW!)
+### Phase 2: Federation & Sponsorship
 - **Federation Protocol** - Human-readable Stellar addresses (stellar.org SEP-2)
   - Convert user@domain addresses to Stellar public keys
   - Register and manage federation addresses for users
@@ -129,7 +129,7 @@ EduPass eliminates these inefficiencies by leveraging Stellar blockchain and Sor
   - FederationManager: register/lookup federation addresses
   - SponsorshipManager: sponsor accounts, track sponsored transactions
 
-### ⏰ Phase 3: Time-Bounded, Muxed Accounts & Fiat Integration (NEW!)
+### Phase 3: Time-Bounded, Muxed Accounts & Fiat Integration
 - **Time-Bounded Transactions** - Automatic expiration for time-sensitive payments
   - Set minTime and maxTime for transaction validity windows
   - Perfect for flash scholarships and limited-time offers
@@ -799,7 +799,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ⏳ Stellar issuer account generation (pending PostgreSQL)
 - ⏳ Initial testing
 
-### 🚀 Roadmap
+### Roadmap
 
 **Phase 1: Core Platform (Q1 2026)** ✅
 - ✅ Soroban smart contract implementation
