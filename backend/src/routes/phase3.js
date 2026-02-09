@@ -493,4 +493,292 @@ router.get('/sep24/transactions', auth, async (req, res) => {
   }
 });
 
+// ============================================================================
+// PHASE 3: PATH PAYMENTS
+// ============================================================================
+
+/**
+ * @route   POST /api/phase3/path-payment
+ * @desc    Send payment with automatic asset conversion
+ * @access  Private
+ */
+router.post(
+  '/path-payment',
+  auth,
+  [
+    body('destinationPublicKey').notEmpty().withMessage('Destination required'),
+    body('destAmount').isFloat({ gt: 0 }).withMessage('Amount must be greater than 0'),
+    body('sendMax').isFloat({ gt: 0 }).withMessage('Send max must be greater than 0'),
+    body('destAssetCode').optional().isString(),
+    body('sendAssetCode').optional().isString()
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { destinationPublicKey, destAmount, sendMax, destAssetCode, sendAssetCode, path } = req.body;
+      
+      const userQuery = await pool.query(
+        'SELECT secret_key FROM users WHERE id = $1',
+        [req.user.id]
+      );
+      
+      if (userQuery.rows.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const secretKey = userQuery.rows[0].secret_key;
+      
+      const result = await stellar.sendPathPayment(
+        secretKey,
+        destinationPublicKey,
+        destAmount,
+        destAssetCode ? new stellar.StellarSdk.Asset(destAssetCode, process.env.ISSUER_PUBLIC_KEY) : stellar.edupassAsset,
+        sendMax,
+        sendAssetCode ? new stellar.StellarSdk.Asset(sendAssetCode, process.env.ISSUER_PUBLIC_KEY) : stellar.StellarSdk.Asset.native(),
+        path || []
+      );
+      
+      res.json({
+        success: true,
+        message: 'Path payment successful',
+        ...result
+      });
+    } catch (error) {
+      console.error('Path payment error:', error);
+      res.status(500).json({
+        message: 'Failed to send path payment',
+        error: error.message
+      });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/phase3/find-paths
+ * @desc    Find payment paths between assets
+ * @access  Private
+ */
+router.post(
+  '/find-paths',
+  auth,
+  [
+    body('destinationPublicKey').notEmpty().withMessage('Destination required'),
+    body('destAssetCode').notEmpty().withMessage('Destination asset required'),
+    body('destAmount').isFloat({ gt: 0 }).withMessage('Amount must be greater than 0')
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { destinationPublicKey, destAssetCode, destAmount } = req.body;
+      
+      const userQuery = await pool.query(
+        'SELECT public_key FROM users WHERE id = $1',
+        [req.user.id]
+      );
+      
+      if (userQuery.rows.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const sourcePublicKey = userQuery.rows[0].public_key;
+      const destAsset = new stellar.StellarSdk.Asset(destAssetCode, process.env.ISSUER_PUBLIC_KEY);
+      
+      const paths = await stellar.findPaymentPaths(
+        sourcePublicKey,
+        destinationPublicKey,
+        destAsset,
+        destAmount
+      );
+      
+      res.json({
+        success: true,
+        paths
+      });
+    } catch (error) {
+      console.error('Find paths error:', error);
+      res.status(500).json({
+        message: 'Failed to find payment paths',
+        error: error.message
+      });
+    }
+  }
+);
+
+// ============================================================================
+// PHASE 3: MANAGE DATA
+// ============================================================================
+
+/**
+ * @route   POST /api/phase3/manage-data
+ * @desc    Store or delete data entry on account
+ * @access  Private
+ */
+router.post(
+  '/manage-data',
+  auth,
+  [
+    body('name').notEmpty().withMessage('Data name is required'),
+    body('value').optional().isString()
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { name, value } = req.body;
+      
+      const userQuery = await pool.query(
+        'SELECT secret_key FROM users WHERE id = $1',
+        [req.user.id]
+      );
+      
+      if (userQuery.rows.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const secretKey = userQuery.rows[0].secret_key;
+      
+      const result = await stellar.manageData(secretKey, name, value || null);
+      
+      res.json({
+        success: true,
+        message: `Data entry ${value ? 'set' : 'deleted'} successfully`,
+        ...result
+      });
+    } catch (error) {
+      console.error('Manage data error:', error);
+      res.status(500).json({
+        message: 'Failed to manage data',
+        error: error.message
+      });
+    }
+  }
+);
+
+/**
+ * @route   GET /api/phase3/account-data
+ * @desc    Get all data entries for current account
+ * @access  Private
+ */
+router.get('/account-data', auth, async (req, res) => {
+  try {
+    const userQuery = await pool.query(
+      'SELECT public_key FROM users WHERE id = $1',
+      [req.user.id]
+    );
+    
+    if (userQuery.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    const publicKey = userQuery.rows[0].public_key;
+    const data = await stellar.getAccountData(publicKey);
+    
+    res.json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    console.error('Get account data error:', error);
+    res.status(500).json({
+      message: 'Failed to get account data',
+      error: error.message
+    });
+  }
+});
+
+// ============================================================================
+// PHASE 3: ACCOUNT MERGE
+// ============================================================================
+
+/**
+ * @route   POST /api/phase3/merge-account
+ * @desc    Merge account into another account
+ * @access  Private
+ */
+router.post(
+  '/merge-account',
+  auth,
+  [
+    body('destinationPublicKey').notEmpty().withMessage('Destination account required')
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { destinationPublicKey } = req.body;
+      
+      const userQuery = await pool.query(
+        'SELECT secret_key FROM users WHERE id = $1',
+        [req.user.id]
+      );
+      
+      if (userQuery.rows.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const secretKey = userQuery.rows[0].secret_key;
+      
+      const result = await stellar.mergeAccount(secretKey, destinationPublicKey);
+      
+      res.json({
+        success: true,
+        message: 'Account merged successfully',
+        ...result
+      });
+    } catch (error) {
+      console.error('Merge account error:', error);
+      res.status(500).json({
+        message: 'Failed to merge account',
+        error: error.message
+      });
+    }
+  }
+);
+
+/**
+ * @route   GET /api/phase3/can-merge
+ * @desc    Check if account can be merged
+ * @access  Private
+ */
+router.get('/can-merge', auth, async (req, res) => {
+  try {
+    const userQuery = await pool.query(
+      'SELECT public_key FROM users WHERE id = $1',
+      [req.user.id]
+    );
+    
+    if (userQuery.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    const publicKey = userQuery.rows[0].public_key;
+    const eligibility = await stellar.canMergeAccount(publicKey);
+    
+    res.json({
+      success: true,
+      ...eligibility
+    });
+  } catch (error) {
+    console.error('Check merge eligibility error:', error);
+    res.status(500).json({
+      message: 'Failed to check merge eligibility',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
