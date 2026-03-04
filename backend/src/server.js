@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const logger = require('./utils/logger');
 const { connectDatabase } = require('./config/database');
+const { validateEnvironment, getSanitizedConfig } = require('./utils/validateEnv');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -98,6 +99,16 @@ app.use((err, req, res, next) => {
 // Start server
 const startServer = async () => {
   try {
+    // Validate environment variables
+    if (!validateEnvironment()) {
+      logger.error('Environment validation failed. Please check your .env file.');
+      process.exit(1);
+    }
+
+    // Log sanitized configuration
+    const config = getSanitizedConfig();
+    logger.info('Configuration loaded:', config);
+
     // Connect to database
     await connectDatabase();
     logger.info('Database connected successfully');
