@@ -11,7 +11,19 @@
     "build": "cd frontend && npm run build",
     "test": "npm run test:backend && npm run test:frontend",
     "test:backend": "cd backend && npm test",
-    "test:frontend": "cd frontend && npm test"
+    "test:frontend": "cd frontend && npm test",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:restart": "docker-compose restart",
+    "docker:clean": "docker-compose down -v",
+    "pm2:start": "pm2 start ecosystem.config.js --env production",
+    "pm2:stop": "pm2 stop ecosystem.config.js",
+    "pm2:restart": "pm2 restart ecosystem.config.js",
+    "pm2:logs": "pm2 logs",
+    "pm2:monit": "pm2 monit",
+    "production:start": "cd backend && NODE_ENV=production node src/server.js"
   },
   "keywords": [
     "stellar",
