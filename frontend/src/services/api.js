@@ -6,17 +6,80 @@ const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  timeout: 30000, // 30 second timeout
 });
 
 // Add token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
+
+// Enhanced error handling interceptor
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Network error
+    if (!error.response) {
+      console.error('Network Error:', error.message);
+      const networkError = new Error('Unable to connect to server. Please check your internet connection.');
+      networkError.isNetworkError = true;
+      return Promise.reject(networkError);
+    }
+
+    // Handle authentication errors
+    if (error.response.status === 401) {
+      // Token expired or invalid
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      // Redirect to login if not already there
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+      
+      return Promise.reject(new Error('Session expired. Please login again.'));
+    }
+
+    // Handle server errors
+    if (error.response.status >= 500) {
+      console.error('Server Error:', error.response.data);
+      return Promise.reject(
+        new Error('Server error. Please try again later or contact support.')
+      );
+    }
+
+    // Handle validation errors
+    if (error.response.status === 400) {
+      const message = error.response.data?.error || 
+                     error.response.data?.message || 
+                     'Invalid request. Please check your input.';
+      return Promise.reject(new Error(message));
+    }
+
+    // Handle rate limiting
+    if (error.response.status === 429) {
+      return Promise.reject(
+        new Error('Too many requests. Please wait a moment and try again.')
+      );
+    }
+
+    // Default error handling
+    const message = error.response.data?.error || 
+                   error.response.data?.message || 
+                   'An unexpected error occurred.';
+    return Promise.reject(new Error(message));
+  }
+);
 
 // Auth APIs
 export const register = async (userData) => {
