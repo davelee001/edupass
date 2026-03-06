@@ -177,7 +177,7 @@ EduPass eliminates these inefficiencies by leveraging Stellar blockchain and Sor
 
 ## Quick Start
 
-Get started in **under 10 minutes** with our comprehensive guide: [📖 QUICKSTART.md](QUICKSTART.md)
+Get started in **under 10 minutes** with our comprehensive guide: [QUICKSTART.md](QUICKSTART.md)
 
 ### Option 1: Docker (Recommended for Production)
 
@@ -223,7 +223,7 @@ npm run docker:build
 npm run pm2:start
 ```
 
-📖 **Detailed deployment guides:**
+**Detailed deployment guides:**
 - [QUICKSTART.md](QUICKSTART.md) - 10-minute getting started guide
 - [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) - Comprehensive deployment options
 - [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) - Pre-deployment checklist
@@ -399,7 +399,7 @@ GRANT ALL PRIVILEGES ON DATABASE edupass TO edupass_user;
 - Create a new database named `edupass`
 - Create a user with appropriate permissions
 
-> 📖 For detailed setup instructions, see [Database Setup Guide](docs/DATABASE_SETUP.md)
+> For detailed setup instructions, see [Database Setup Guide](docs/DATABASE_SETUP.md)
 
 ### Step 4: Configure Environment
 
@@ -476,7 +476,7 @@ cargo build --target wasm32-unknown-unknown --release
 soroban contract optimize --wasm target/wasm32-unknown-unknown/release/edupass_token.wasm
 ```
 
-> 📖 For detailed smart contract documentation, see [Soroban Integration Guide](docs/SOROBAN_INTEGRATION.md)
+> For detailed smart contract documentation, see [Soroban Integration Guide](docs/SOROBAN_INTEGRATION.md)
 
 ### Step 7: Start the Application
 
@@ -535,7 +535,7 @@ Accept and redeem education credits:
 
 **Use Case**: Schools, universities, training centers, examination boards
 
-## 🚀 Enhanced Soroban Features
+## Enhanced Soroban Features
 
 EduPass now includes production-ready Soroban enhancements that make blockchain interactions more reliable, performant, and developer-friendly.
 
@@ -552,7 +552,7 @@ function Dashboard({ publicKey }) {
   return (
     <div>
       <h2>Balance: {balance / 10000000} Credits</h2>
-      {isExpired && <span>⚠️ Credits Expired</span>}
+      {isExpired && <span>Credits Expired</span>}
     </div>
   );
 }
@@ -613,22 +613,22 @@ const { balance } = useBalance(publicKey, 30000); // Poll every 30s
 <SorobanStatus showDetails={true} />
 ```
 
-📖 **Full Documentation**: [Soroban Enhanced Features Guide](docs/SOROBAN_ENHANCED.md)  
-🚀 **Quick Start**: [5-Minute Soroban Setup](docs/SOROBAN_QUICKSTART.md)
+**Full Documentation**: [Soroban Enhanced Features Guide](docs/SOROBAN_ENHANCED.md)  
+**Quick Start**: [5-Minute Soroban Setup](docs/SOROBAN_QUICKSTART.md)
 
-## 📱 QR Code Features
+## QR Code Features
 
 EduPass includes comprehensive QR code integration for seamless mobile transactions using industry-standard Stellar SEP-0007 payment URIs.
 
 ### Key Features
 
-- **📥 Receive QR Codes** - Students display scannable QR codes containing their Stellar public key
-- **💰 Payment Requests** - Schools generate QR codes with specific amounts and purposes
-- **📷 Quick Scanner** - One-click camera scanner with auto-form-fill
-- **📄 Transaction Receipts** - QR codes linking to blockchain explorer for verification
-- **🔗 SEP-0007 Compatible** - Standard Stellar payment URI format works with all Stellar wallets
-- **💾 Download & Share** - Save QR codes as images for offline/print use
-- **🎯 Smart Parsing** - Automatically detects and parses multiple QR formats
+- **Receive QR Codes** - Students display scannable QR codes containing their Stellar public key
+- **Payment Requests** - Schools generate QR codes with specific amounts and purposes
+- **Quick Scanner** - One-click camera scanner with auto-form-fill
+- **Transaction Receipts** - QR codes linking to blockchain explorer for verification
+- **SEP-0007 Compatible** - Standard Stellar payment URI format works with all Stellar wallets
+- **Download & Share** - Save QR codes as images for offline/print use
+- **Smart Parsing** - Automatically detects and parses multiple QR formats
 
 ### QR Code Components
 
@@ -656,7 +656,7 @@ import { QuickScanButton, QRScannerModal } from '../components/QRScanner';
 // Quick scan button
 <QuickScanButton
   onScan={(parsed) => handleScan(parsed)}
-  buttonText="📷 Scan Payment QR"
+  buttonText="Scan Payment QR"
 />
 ```
 
@@ -677,7 +677,7 @@ School → "Create Payment Request" → Student scans → Form auto-fills → Pa
 After payment → Receipt QR → Anyone scans → Blockchain explorer shows proof
 ```
 
-📖 **Full Guide**: [QR Code Integration Guide](docs/QR_CODE_GUIDE.md)
+**Full Guide**: [QR Code Integration Guide](docs/QR_CODE_GUIDE.md)
 
 ## Technology Stack
 
@@ -813,7 +813,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Project Status
 
 **Current Version**: 1.0.0  
-**Status**: 🚀 Production Ready - Deployment Tested
+**Status**: Production Ready - Deployment Tested
 
 ### ✅ Completed Features
 - Complete user authentication system
@@ -837,7 +837,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **QR code utilities** (SEP-0007 URI generation, validation, parsing)
 - **Soroban build & deploy scripts** (14 cross-platform automation scripts)
 
-### 🚀 NEW: Enhanced Soroban Features (Feb 2026)
+### NEW: Enhanced Soroban Features (Feb 2026)
 - ✅ **Transaction Retry Logic** - Auto-retry with exponential backoff
 - ✅ **Transaction Confirmation Polling** - Wait for ledger confirmation
 - ✅ **Pre-Submit Simulation** - Validate before execution
@@ -852,7 +852,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ **UI Components** - SorobanStatus, SorobanExample widgets
 - ✅ **Enhanced Documentation** - 2 new comprehensive guides
 
-### 📱 NEW: QR Code Integration (Feb 2026)
+### NEW: QR Code Integration (Feb 2026)
 - ✅ **QR Code Components** - ReceiveQR, PaymentRequestQR, TransactionQR, AccountQR
 - ✅ **QR Scanner** - Camera-based scanner with auto-parsing
 - ✅ **SEP-0007 Support** - Standard Stellar payment URI format
@@ -863,7 +863,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ **Multi-Format Support** - URIs, JSON, plain text, transaction URLs
 - ✅ **QR Code Documentation** - Comprehensive integration guide
 
-### � NEW: Production-Ready Deployment (March 2026)
+### NEW: Production-Ready Deployment (March 2026)
 - ✅ **Docker Containerization** - Multi-stage builds for all services
 - ✅ **Docker Compose** - Full-stack orchestration with health checks
 - ✅ **CI/CD Pipeline** - GitHub Actions for automated workflows
@@ -878,7 +878,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ **Security Hardening** - Helmet.js, rate limiting, validation
 - ✅ **Deployment Documentation** - 5 comprehensive guides
 
-### 📋 Setup Progress
+### Setup Progress
 - ✅ Repository structure complete
 - ✅ Backend dependencies installed
 - ✅ Frontend dependencies installed
