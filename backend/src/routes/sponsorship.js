@@ -98,7 +98,7 @@ router.post('/trustline', [
     ).toString('utf-8');
 
     // Create asset
-    const StellarSdk = require('stellar-sdk');
+    const StellarSdk = require('@stellar/stellar-sdk');
     const asset = new StellarSdk.Asset(assetCode, assetIssuer);
 
     // Establish sponsored trustline
