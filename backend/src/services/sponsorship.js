@@ -1,4 +1,4 @@
-const StellarSdk = require('stellar-sdk');
+const StellarSdk = require('@stellar/stellar-sdk');
 const { pool } = require('../config/database');
 const logger = require('../utils/logger');
 
