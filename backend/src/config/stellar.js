@@ -1,4 +1,4 @@
-const StellarSdk = require('stellar-sdk');
+const StellarSdk = require('@stellar/stellar-sdk');
 const logger = require('../utils/logger');
 
 // Determine network
@@ -10,11 +10,8 @@ const server = new StellarSdk.Horizon.Server(
 );
 
 // Set network passphrase
-if (isTestnet) {
-  StellarSdk.Network.useTestNetwork();
-} else {
-  StellarSdk.Network.usePublicNetwork();
-}
+const Networks = StellarSdk.Networks;
+const networkPassphrase = isTestnet ? Networks.TESTNET : Networks.PUBLIC;
 
 // Asset configuration
 const ASSET_CODE = process.env.ASSET_CODE || 'EDUPASS';
